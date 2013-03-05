@@ -1,6 +1,8 @@
 require 'msgpack'
 require 'socket'
 require 'thread'
+require 'resolv'
+require 'resolv-replace'
 
 # keep track of agents
 @registry_lock = Mutex.new

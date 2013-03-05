@@ -1,4 +1,6 @@
 require 'msgpack'
+require 'resolv'
+require 'resolv-replace'
 require 'socket'
 require 'timeout'
 
