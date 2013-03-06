@@ -9,7 +9,7 @@ Thread.abort_on_exception = true
 
 module ClientRegistrationHeartbeatStateMachine
 	def self.start
-		register; establish_hearbeat; monitor_heartbeat; accept_rpc_requests
+		register; establish_heartbeat; monitor_heartbeat; accept_rpc_requests
 	end
 	
 	# keep trying until we successfully register
