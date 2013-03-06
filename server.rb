@@ -8,6 +8,8 @@ require 'nio'
 # die as soon as possible
 Thread.abort_on_exception = true
 
+class DoubleRegistrationAttempt < StandardError; end
+
 module ServerRegistrationHearbeatStateMachine
 	# keep track of agents
 	@registry_lock = Mutex.new
@@ -15,18 +17,19 @@ module ServerRegistrationHearbeatStateMachine
 	@heartbeat_selector = NIO::Selector.new
 	
 	def self.start
+    puts "Starting server registration state machine."
 		start_registration_listener; start_heartbeat_select_loop; start_culling_loop
 	end
 	
 	# set up registration handling
 	def self.start_registration_listener
-		registration_thread = Thread.new do
-		  Socket.tcp_server_loop(3000) do |conn|
+		Thread.new do
 			puts "Listening for registration requests."
-			Thread.new do
-			  puts "Handling registration request."
-			  registration_handler(conn)
-			end
+		  Socket.tcp_server_loop(3000) do |conn|
+        Thread.new do
+          puts "Handling registration request."
+          registration_handler(conn)
+        end
 		  end
 		end
 	end
@@ -40,9 +43,15 @@ module ServerRegistrationHearbeatStateMachine
 	
 	# handle registration requests
 	def self.registration_handler(connection)
+    puts "Handling registration."
 		payload = MessagePack.unpack(connection.read)
 		payload["connection"] = connection
 		@registry_lock.synchronize do
+      # make sure no double registration happens because that will leak
+      # connections in @heartbeat_selector event loop
+      if @registry[payload["fqdn"]]
+        raise DoubleRegistrationAttempt, "#{payload["fqdn"]} tried to register more than once."
+      end
 			puts "Registering #{payload["fqdn"]}."
 			@registry[payload["fqdn"]] = payload
 		end
