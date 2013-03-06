@@ -60,7 +60,8 @@ module ServerRegistrationHearbeatStateMachine
 		heartbeat_monitor = @heartbeat_selector.register(connection, :r)
 		heartbeat_monitor.value = proc do
       puts "Reading heartbeat data."
-			heartbeat = heartbeat_monitor.io.gets.strip
+      # need to be careful if client closes connection while we try to read
+			heartbeat = (heartbeat_monitor.io.gets || "").strip
 			if heartbeat == "OK"
 				puts "#{payload["fqdn"]} still chugging along."
 				payload["heartbeat_timestamp"] = Time.now.to_i
