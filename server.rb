@@ -35,8 +35,14 @@ module ServerRegistrationHearbeatStateMachine
 	
 	def self.start_heartbeat_select_loop
     puts "Starting heartbeat select loop."
+    # this is pretty weird. there is a lock on @heartbeat_selector that is set when select is
+    # called so we can not register anything until that lock is released and the way thread
+    # scheduling works out it is possible to keep coming back to this loop and reacquring the
+    # lock before the registration handler thread gets a chance to add it to the select loop
+    # that's why we need "sleep 1" at the end of the loop. we need to give other threads a
+    # chance to acquire the select loop lock and register heartbeat sockets.
 		Thread.new do 
-			loop { puts "Selector loop."; @heartbeat_selector.select(10) {|m| m.value.call} }
+			loop { @heartbeat_selector.select(1) {|m| m.value.call}; sleep 1 }
 		end
 	end
 	
