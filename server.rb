@@ -36,7 +36,7 @@ module ServerRegistrationHearbeatStateMachine
 	def self.start_heartbeat_select_loop
     puts "Starting heartbeat select loop."
 		Thread.new do 
-			loop { puts "Selector loop."; @heartbeat_selector.select(10) {|m| m.value.call} }
+			loop { puts "Selector loop."; sleep 1; @heartbeat_selector.select(10) {|m| m.value.call} }
 		end
 	end
 	
