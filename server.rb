@@ -44,7 +44,7 @@ module ServerRegistrationHearbeatStateMachine
 	# handle registration requests
 	def self.registration_handler(connection)
     puts "Handling registration."
-    payload = connection.gets
+    payload = connection.gets.strip
 		payload = MessagePack.unpack(payload)
 		payload["connection"] = connection
 		@registry_lock.synchronize do
@@ -57,7 +57,8 @@ module ServerRegistrationHearbeatStateMachine
 			@registry[payload["fqdn"]] = payload
 		end
 		# add heartbeat connection to NIO select loop
-		heartbeat_monitor = @heartbeat_selector.register(connection, :r)
+    puts "Adding connection to selector loop."
+		heartbeat_monitor = @heartbeat_selector.register(connection, :w)
 		heartbeat_monitor.value = proc do
 			heartbeat = heartbeat_monitor.io.gets
 			if heartbeat == "OK"
@@ -72,6 +73,7 @@ module ServerRegistrationHearbeatStateMachine
 	# every 2 minutes go through the list of registered
 	# agents and verify that they are up
 	def self.start_culling_loop
+    puts "Starting connection killer."
 		Thread.new do
 			loop do
 				sleep 120

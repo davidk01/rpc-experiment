@@ -32,7 +32,7 @@ module ClientRegistrationHeartbeatStateMachine
 		@heartbeat_thread = Thread.new do
       loop do
         puts "Heartbeat."
-        @conn.puts "OK"
+        @conn.puts "OK"; @conn.flush
         sleep 5
       end
 		end
