@@ -43,7 +43,6 @@ module ServerRegistrationHearbeatStateMachine
 	# handle registration requests
 	def self.registration_handler(connection)
     puts "Handling registration."
-    connection.close_write
     payload = connection.gets.strip
 		payload = MessagePack.unpack(payload)
 		payload["connection"] = connection
@@ -61,7 +60,7 @@ module ServerRegistrationHearbeatStateMachine
 		heartbeat_monitor = @heartbeat_selector.register(connection, :r)
 		heartbeat_monitor.value = proc do
       puts "Reading heartbeat data."
-			heartbeat = heartbeat_monitor.io.gets
+			heartbeat = heartbeat_monitor.io.gets.strip
 			if heartbeat == "OK"
 				puts "#{payload["fqdn"]} still chugging along."
 				payload["heartbeat_timestamp"] = Time.now.to_i
