@@ -33,11 +33,10 @@ module ServerRegistrationHearbeatStateMachine
 		end
 	end
 	
-	# keep re
 	def self.start_heartbeat_select_loop
     puts "Starting heartbeat select loop."
 		Thread.new do 
-			loop { @heartbeat_selector.select {|m| m.value.call} }
+			loop { puts "Selector loop."; @heartbeat_selector.select {|m| m.value.call} }
 		end
 	end
 	
@@ -61,6 +60,7 @@ module ServerRegistrationHearbeatStateMachine
     connection.close_write
 		heartbeat_monitor = @heartbeat_selector.register(connection, :r)
 		heartbeat_monitor.value = proc do
+      puts "Reading heartbeat data."
 			heartbeat = heartbeat_monitor.io.gets
 			if heartbeat == "OK"
 				puts "#{payload["fqdn"]} still chugging along."
