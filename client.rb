@@ -17,7 +17,7 @@ module ClientRegistrationHeartbeatStateMachine
 		begin
 			@conn = Socket.tcp('localhost', 3000)
 			puts "Registering."
-			@conn.write({
+			@conn.puts({
 				"fqdn" => Socket.gethostbyname(Socket.gethostname).first,
 				"agent_dispatch_port" => 3001
 			}.to_msgpack)

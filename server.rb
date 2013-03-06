@@ -44,7 +44,7 @@ module ServerRegistrationHearbeatStateMachine
 	# handle registration requests
 	def self.registration_handler(connection)
     puts "Handling registration."
-		payload = MessagePack.unpack(connection.read)
+		payload = MessagePack.unpack(connection.gets)
 		payload["connection"] = connection
 		@registry_lock.synchronize do
       # make sure no double registration happens because that will leak
