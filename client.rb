@@ -30,6 +30,7 @@ module ClientRegistrationHeartbeatStateMachine
 	# send "OK" every X number of seconds
 	def self.establish_heartbeat
 		@heartbeat_thread = Thread.new do
+      puts "Heartbeat."
 			@conn.puts "OK"
 			sleep 5
 		end

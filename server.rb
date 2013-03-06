@@ -27,7 +27,6 @@ module ServerRegistrationHearbeatStateMachine
 			puts "Listening for registration requests."
 		  Socket.tcp_server_loop(3000) do |conn|
         Thread.new do
-          puts "Handling registration request."
           registration_handler(conn)
         end
 		  end
@@ -36,6 +35,7 @@ module ServerRegistrationHearbeatStateMachine
 	
 	# keep re
 	def self.start_heartbeat_select_loop
+    puts "Starting heartbeat select loop."
 		Thread.new do 
 			loop { @heartbeat_selector.select {|m| m.value.call} }
 		end
