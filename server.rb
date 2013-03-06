@@ -58,7 +58,8 @@ module ServerRegistrationHearbeatStateMachine
 		end
 		# add heartbeat connection to NIO select loop
     puts "Adding connection to selector loop."
-		heartbeat_monitor = @heartbeat_selector.register(connection, :w)
+    connection.close_write
+		heartbeat_monitor = @heartbeat_selector.register(connection, :r)
 		heartbeat_monitor.value = proc do
 			heartbeat = heartbeat_monitor.io.gets
 			if heartbeat == "OK"
