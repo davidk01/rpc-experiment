@@ -4,41 +4,52 @@ require 'resolv-replace'
 require 'socket'
 require 'timeout'
 
-# registration server also checks to make sure
-# we are up and running so listen for such requests
-# and return an "OK" so that we are not taken out
-# of the registry
-heartbeat_response = "OK"
-heartbeat_request_listener = Thread.new do
-  puts "Listening for heartbeat requests."
-  Socket.tcp_server_loop(3002) do |conn|
-    conn.write(heartbeat_response)
-    puts "Closing connection heartbeat response connection."
-    conn.close
+# die as soon as possible
+Thread.abort_on_exception = true
+
+module ClientRegistrationHeartbeatStateMachine
+	def self.start
+		register; establish_hearbeat; monitor_heartbeat; accept_rpc_requests
+	end
+	
+	# keep trying until we successfully register
+	def self.register
+		begin
+			@conn = Socket.tcp('localhost', 3000)
+			puts "Registering."
+			@conn.write({
+				"fqdn" => Socket.gethostbyname(Socket.gethostname).first,
+				"agent_dispatch_port" => 3001
+			}.to_msgpack)
+		rescue Errno::ECONNREFUSED
+			puts "Registration connection refused. Retrying."
+			retry
+		end
+	end
+	
+	# send "OK" every X number of seconds
+	def self.establish_heartbeat
+		@heartbeat_thread = Thread.new do
+			@conn.puts "OK"
+			sleep 5
+		end
+	end
+	
+	# make sure hearbeat connection is working and take action to
+	# correct the error if we can't send the heartbeat
+	def self.monitor_heartbeat
+		@heartbeat_monitor_thread = Thread.new do
+			loop do
+				puts "No mitigating action yet."
+				sleep 120
+			end
+		end
+	end
+
+  def self.accept_rpc_requests
+    puts "Accepting rpc requests."
   end
 end
 
-# register every X seconds to make sure registration
-# server is up and running
-registration_thread = Thread.new do
-  puts "Starting registration heartbeat."
-  loop do
-    begin
-    Socket.tcp('localhost', 3000) do |conn|
-      puts "Registering."
-      payload = {
-        :fqdn => Socket.gethostbyname(Socket.gethostname).first,
-        :agent_dispatch_port => 3001,
-        :heartbeat_port => 3002
-      }.to_msgpack
-      conn.write(payload)
-    end
-    rescue Errno::ECONNREFUSED
-      puts "Registration hearbeat connection was refused."
-    end
-    sleep 5
-  end
-end
-
-registration_thread.join
-heartbeat_request_listener.join
+ClientRegistrationHeartbeatStateMachine.start
+sleep
