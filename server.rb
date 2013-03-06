@@ -36,7 +36,7 @@ module ServerRegistrationHearbeatStateMachine
 	def self.start_heartbeat_select_loop
     puts "Starting heartbeat select loop."
 		Thread.new do 
-			loop { puts "Selector loop."; sleep 1; @heartbeat_selector.select(10) {|m| m.value.call} }
+			loop { puts "Selector loop."; @heartbeat_selector.select(10) {|m| m.value.call} }
 		end
 	end
 	
@@ -58,6 +58,7 @@ module ServerRegistrationHearbeatStateMachine
 		# add heartbeat connection to NIO select loop
     puts "Adding connection to selector loop."
 		heartbeat_monitor = @heartbeat_selector.register(connection, :r)
+    puts "Connection added to selector loop."
 		heartbeat_monitor.value = proc do
       puts "Reading heartbeat data."
       # need to be careful if client closes connection while we try to read
