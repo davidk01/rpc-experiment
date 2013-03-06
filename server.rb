@@ -36,13 +36,14 @@ module ServerRegistrationHearbeatStateMachine
 	def self.start_heartbeat_select_loop
     puts "Starting heartbeat select loop."
 		Thread.new do 
-			loop { puts "Selector loop."; @heartbeat_selector.select {|m| m.value.call} }
+			loop { puts "Selector loop."; @heartbeat_selector.select(10) {|m| m.value.call} }
 		end
 	end
 	
 	# handle registration requests
 	def self.registration_handler(connection)
     puts "Handling registration."
+    connection.close_write
     payload = connection.gets.strip
 		payload = MessagePack.unpack(payload)
 		payload["connection"] = connection
@@ -57,7 +58,6 @@ module ServerRegistrationHearbeatStateMachine
 		end
 		# add heartbeat connection to NIO select loop
     puts "Adding connection to selector loop."
-    connection.close_write
 		heartbeat_monitor = @heartbeat_selector.register(connection, :r)
 		heartbeat_monitor.value = proc do
       puts "Reading heartbeat data."
