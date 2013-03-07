@@ -82,7 +82,7 @@ module ServerRegistrationHearbeatStateMachine
     rescue DoubleRegistrationAttempt
       puts "Double registration attempt. Cleaning up and retrying."
       fqdn = payload["fqdn"]
-      @hearbeat_selector.deregister(@registry.connection(fqdn))
+      @heartbeat_selector.deregister(@registry.connection(fqdn))
       @registry.delete(fqdn); retry
     end
     puts "Adding connection to selector loop."
@@ -97,6 +97,10 @@ module ServerRegistrationHearbeatStateMachine
           payload["heartbeat_timestamp"] = Time.now.to_i
         else
           puts "Something went wrong with #{payload["fqdn"]}."
+          puts "Received message: #{heartbeat}."
+          puts "Removing it from select loop and registry."
+          @heartbeat_selector.deregister(connection)
+          @registry.async.delete(paylod["fqdn"])
         end
       end
     end
