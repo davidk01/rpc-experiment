@@ -9,6 +9,44 @@ require 'celluloid'
 # die as soon as possible
 Thread.abort_on_exception = true
 
+class NIOActor
+  include Celluloid
+  
+  def initialize(registry)
+    @selector_loop, @registry = NIO::Selector.new, registry
+  end
+  
+  def tick
+    @selector_loop.select(1) {|m| m.value.call}
+  end
+  
+  def deregister(connection)
+    @selector_loop.deregister(connection)
+  end
+  
+  def register(connection, interest)
+    @selector_loop.register(connection, interest)
+  end
+  
+  def register_connection(fqdn, connection)
+    heartbeat_monitor = register(connection, :r)
+    puts "Connection added to selector loop."
+    heartbeat_monitor.value = proc do
+      puts "Reading heartbeat data."
+      heartbeat = (heartbeat_monitor.io.gets || "").strip
+      if heartbeat == "OK"
+        puts "#{fqdn} still chugging along."
+        @registry.beat(fqdn)
+      else
+        puts "Something went wrong with #{fqdn}."
+        puts "Received message: #{heartbeat}."
+        puts "Removing it from select loop and registry."
+        deregister(connection); @registry.delete(fqdn)
+      end
+    end
+  end
+end
+
 class DoubleRegistrationAttempt < StandardError; end
 class Registrar
   include Celluloid
@@ -39,12 +77,16 @@ class Registrar
     @registry.each {|fqdn, data| fqdn_accumulator << fqdn if blk.call(fqdn, data)}
     fqdn_accumulator
   end
+  
+  def beat(fqdn)
+    @registry[fqdn]["heartbeat_timestamp"] = Time.now.to_i
+  end
 end
 
 module ServerRegistrationHearbeatStateMachine
 
   @registry = Registrar.new
-  @heartbeat_selector, @connection_registration_lock = NIO::Selector.new, Mutex.new
+  @heartbeat_selector = NIOActor.new(@registry)
   
   def self.start
     puts "Starting server registration state machine."
@@ -64,12 +106,7 @@ module ServerRegistrationHearbeatStateMachine
   def self.start_heartbeat_select_loop
     puts "Starting heartbeat select loop."
     Thread.new do 
-      loop do
-        @connection_registration_lock.synchronize do
-          @heartbeat_selector.select(1) {|m| m.value.call}
-        end
-        sleep 1
-      end
+      loop { @heartbeat_selector.tick; sleep 1 }
     end
   end
   
@@ -86,24 +123,7 @@ module ServerRegistrationHearbeatStateMachine
       @registry.delete(fqdn); retry
     end
     puts "Adding connection to selector loop."
-    @connection_registration_lock.synchronize do
-      heartbeat_monitor = @heartbeat_selector.register(connection, :r)
-      puts "Connection added to selector loop."
-      heartbeat_monitor.value = proc do
-        puts "Reading heartbeat data."
-        heartbeat = (heartbeat_monitor.io.gets || "").strip
-        if heartbeat == "OK"
-          puts "#{payload["fqdn"]} still chugging along."
-          payload["heartbeat_timestamp"] = Time.now.to_i
-        else
-          puts "Something went wrong with #{payload["fqdn"]}."
-          puts "Received message: #{heartbeat}."
-          puts "Removing it from select loop and registry."
-          @heartbeat_selector.deregister(connection)
-          @registry.async.delete(payload["fqdn"])
-        end
-      end
-    end
+    @heartbeat_selector.register_connection(payload["fqdn"], connection)
   end
   
   # anything older than 5 minutes dies
@@ -116,7 +136,7 @@ module ServerRegistrationHearbeatStateMachine
           Time.now.to_i - data["heartbeat_timestamp"] > 5 * 60
         end.each do |fqdn|
           @heartbeat_selector.deregister(@registry.connection(fqdn))
-          @registry.async.delete(fqdn)
+          @registry.delete(fqdn)
         end
       end
     end
