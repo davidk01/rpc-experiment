@@ -37,6 +37,8 @@ module ClientRegistrationHeartbeatStateMachine
           sleep 5
         rescue Errno::EPIPE
           break
+        ensure
+          @conn.close
         end
       end
       restart_heartbeat
