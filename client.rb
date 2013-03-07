@@ -2,8 +2,7 @@ require 'msgpack'
 require 'resolv'
 require 'resolv-replace'
 require 'socket'
-require 'timeout'
-
+require 'celluloid'
 # die as soon as possible
 Thread.abort_on_exception = true
 
@@ -22,7 +21,9 @@ module ClientRegistrationHeartbeatStateMachine
         "agent_dispatch_port" => 3001
       }.to_msgpack)
     rescue Errno::ECONNREFUSED
-      puts "Registration connection refused. Retrying."
+      wait_period = 5
+      puts "Registration connection refused. Retrying in #{wait_period} seconds."
+      sleep wait_period
       retry
     end
   end
@@ -43,7 +44,7 @@ module ClientRegistrationHeartbeatStateMachine
   def self.monitor_heartbeat
     @heartbeat_monitor_thread = Thread.new do
       loop do
-        puts "No mitigating action yet."
+        puts "Monitoring heartbeat thread. No mitigating action yet."
         sleep 120
       end
     end
