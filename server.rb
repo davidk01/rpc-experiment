@@ -105,9 +105,7 @@ module ServerRegistrationHearbeatStateMachine
   
   def self.start_heartbeat_select_loop
     puts "Starting heartbeat select loop."
-    Thread.new do 
-      loop { @heartbeat_selector.tick; sleep 1 }
-    end
+    Thread.new { loop { @heartbeat_selector.tick } }
   end
   
   # handle registration requests
