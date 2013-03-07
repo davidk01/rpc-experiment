@@ -43,7 +43,7 @@ module ClientRegistrationHeartbeatStateMachine
     end
   end
   
-  def self.restart_hearbeat
+  def self.restart_heartbeat
     register; establish_hearbeat
   end
   
