@@ -100,7 +100,7 @@ module ServerRegistrationHearbeatStateMachine
           puts "Received message: #{heartbeat}."
           puts "Removing it from select loop and registry."
           @heartbeat_selector.deregister(connection)
-          @registry.async.delete(paylod["fqdn"])
+          @registry.async.delete(payload["fqdn"])
         end
       end
     end
