@@ -44,7 +44,7 @@ module ClientRegistrationHeartbeatStateMachine
   end
   
   def self.restart_heartbeat
-    register; establish_hearbeat
+    register; establish_heartbeat
   end
   
   def self.accept_rpc_requests
