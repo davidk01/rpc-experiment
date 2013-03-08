@@ -7,7 +7,7 @@ module Plugins
     @plugins.keys.clone
   end
   
-  def [](plugin)
+  def self.[](plugin)
     if !(plugin_data = @plugins[plugin])
       raise NoPluginError, "%s does not exist." % [plugin]
     end
@@ -15,10 +15,10 @@ module Plugins
   end
   
   def self.included(base)
-    @plugins[base.name] = base
+    @plugins[base.descriptive_name] = base
     base.instance_variable_set(:@actions, {})
     base.extend(PluginClassMethods)
-    base.instance_eval { include InstanceMethods }
+    base.instance_eval { include PluginInstanceMethods }
   end
   
   module PluginClassMethods
@@ -27,9 +27,10 @@ module Plugins
       @actions[name] = description
       self.instance_eval { define_method(name, &blk) }
     end
-  end
-  
-  module PluginInstanceMethods
+    
+    def actions
+      @actions.keys
+    end
   end
   
 end
