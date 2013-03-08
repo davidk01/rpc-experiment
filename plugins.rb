@@ -1,7 +1,15 @@
 module Plugins
   class NoPluginError < StandardError; end
+  class PluginDefinedTwiceError < StandardError; end
   
-  @plugins = Hash.new {|h, k| h[k] = {}}
+  class Plugin
+    attr_reader :class, :description
+    def initialize(klass, description)
+      @class, @description = klass, description
+    end
+  end
+  
+  @plugins = {}
   
   def self.plugins
     @plugins.keys.clone
@@ -11,14 +19,14 @@ module Plugins
     if !(plugin_data = @plugins[plugin])
       raise NoPluginError, "%s does not exist." % [plugin]
     end
-    plugin_data["class"]
+    plugin_data
   end
   
   def self.included(base)
-    @plugins[base.descriptive_name] = base
-    base.instance_variable_set(:@actions, {})
-    base.extend(PluginClassMethods)
-    base.instance_eval { include PluginInstanceMethods }
+    if @plugins[base.descriptive_name]
+      raise PluginDefinedTwiceError, "#{base.descriptive_name} is already defined."
+    end
+    base.instance_variable_set(:@actions, {}); base.extend(PluginClassMethods)
   end
   
   module PluginClassMethods
@@ -29,8 +37,7 @@ module Plugins
     end
     
     def actions
-      @actions.keys
+      @actions
     end
   end
-  
 end
