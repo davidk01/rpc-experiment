@@ -1,6 +1,5 @@
-module Plugins
-  class NoPluginError < StandardError; end
-  class PluginDefinedTwiceError < StandardError; end
+module PluginComponents
+  class ActionArgumentRequiredError < StandardError; end
   
   class Plugin
     attr_reader :class, :description
@@ -8,6 +7,31 @@ module Plugins
       @class, @description = klass, description
     end
   end
+  
+  # stores various bits about the action, e.g. name, arguments
+  class ActionMetadata
+    def initialize(opts = {})
+      [:name, :desc, :args].each do |e|
+        raise ArgumentError, "#{e} is required." if opts[e].nil?
+      end
+      @name, @description, @arguments = opts[:name], opts[:desc], opts[:args]
+    end
+    
+    # basic argument validation for now
+    def validate_args(opts = {})
+      @arguments.each do |e|
+        if opts[e].nil?
+          raise ActionArgumentRequiredError, "#{e} is a required argument for #{@name}."
+        end
+      end
+    end
+  end
+  
+end
+
+module Plugins
+  class NoPluginError < StandardError; end
+  class PluginDefinedTwiceError < StandardError; end
   
   @plugins = {}
   
@@ -26,13 +50,13 @@ module Plugins
     if @plugins[base.descriptive_name]
       raise PluginDefinedTwiceError, "#{base.descriptive_name} is already defined."
     end
+    @plugins[base.descriptive_name] = PluginComponents::Plugin.new(base, base.description)
     base.instance_variable_set(:@actions, {}); base.extend(PluginClassMethods)
   end
   
   module PluginClassMethods
     def def_action(opts = {}, &blk)
-      name, description = opts[:name], opts[:desc]
-      @actions[name] = description
+      @actions[name] = PluginComponents::ActionMetadata.new(opts)
       self.instance_eval { define_method(name, &blk) }
     end
     
