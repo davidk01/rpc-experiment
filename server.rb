@@ -114,6 +114,7 @@ module ServerRegistrationHearbeatStateMachine
   def self.registration_handler(connection)
     $logger.debug "Handling registration."
     payload = MessagePack.unpack(connection.gets.strip)
+    payload["fqdn"] = connection.remote_address.getnameinfo[0]
     begin
       @registry.register(:payload => payload, :connection => connection)
     rescue DoubleRegistrationAttempt

@@ -20,8 +20,7 @@ module ClientRegistrationHeartbeatStateMachine
       @conn = Socket.tcp('localhost', 3000)
       $logger.debug "Registering."
       @conn.puts({
-        "fqdn" => Socket.gethostbyname(Socket.gethostname).first,
-        "agent_dispatch_port" => 3001
+        "agent_dispatch_port" => 3001,
       }.to_msgpack)
     rescue Errno::ECONNREFUSED
       wait_period = 5
