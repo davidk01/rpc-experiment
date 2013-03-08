@@ -3,6 +3,9 @@ require 'resolv'
 require 'resolv-replace'
 require 'socket'
 require 'celluloid'
+require 'logger'
+$logger = Logger.new('/var/log/rpc-client.log', 'daily')
+
 # die as soon as possible
 Thread.abort_on_exception = true
 
@@ -15,14 +18,14 @@ module ClientRegistrationHeartbeatStateMachine
   def self.register
     begin
       @conn = Socket.tcp('localhost', 3000)
-      puts "Registering."
+      $logger.debug "Registering."
       @conn.puts({
         "fqdn" => Socket.gethostbyname(Socket.gethostname).first,
         "agent_dispatch_port" => 3001
       }.to_msgpack)
     rescue Errno::ECONNREFUSED
       wait_period = 5
-      puts "Registration connection refused. Retrying in #{wait_period} seconds."
+      $logger.error "Registration connection refused. Retrying in #{wait_period} seconds."
       sleep wait_period; retry
     end
   end
@@ -31,12 +34,12 @@ module ClientRegistrationHeartbeatStateMachine
   def self.establish_heartbeat
     @heartbeat_thread = Thread.new do
       loop do
-        puts "Heartbeat."
+        $logger.debug "Heartbeat."
         begin
           @conn.puts "OK"; @conn.flush
           sleep 5
         rescue Errno::EPIPE
-          break
+          $logger.error "Looks like the registry died."; break
         ensure
           @conn.close
         end
@@ -46,11 +49,12 @@ module ClientRegistrationHeartbeatStateMachine
   end
   
   def self.restart_heartbeat
+    $logger.info "Re-establishing heartbeat."
     register; establish_heartbeat
   end
   
   def self.accept_rpc_requests
-    puts "Accepting rpc requests."
+    $logger.info "Accepting rpc requests."
   end
 end
 
