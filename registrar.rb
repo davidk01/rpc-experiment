@@ -46,7 +46,7 @@ class Registrar
   end
   
   def delete(fqdn)
-    @registry[fqdn].connection.close; @registry.delete(fqdn)
+    @registry.delete(fqdn)
   end
   
   def beat(fqdn)
