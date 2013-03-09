@@ -27,8 +27,7 @@ class Registrar
 end
 
 class Registrar
-  include Celluloid
-  
+
   def initialize
     @registry = {}
   end
@@ -56,4 +55,5 @@ class Registrar
   def beat(fqdn)
     @registry[fqdn].refresh_timestamp
   end
+  
 end
