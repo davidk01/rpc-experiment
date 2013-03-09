@@ -40,6 +40,8 @@ module ClientRegistrationHeartbeatStateMachine
           sleep 5
         rescue Errno::EPIPE
           $logger.error "Looks like the registry died."; break
+        rescue Errno::ECONNRESET
+          $logger.error "Registry closed connection on us."; break
         end
       end
       restart_heartbeat
