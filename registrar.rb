@@ -41,6 +41,10 @@ class Registrar
     end
   end
   
+  def each
+    @registry.each
+  end
+  
   def connection(fqdn)
     @registry[fqdn].connection
   end
