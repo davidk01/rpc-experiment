@@ -5,7 +5,7 @@ class NIOActor
     @selector_loop, @registry = NIO::Selector.new, Registrar.new
   end
   
-  def filter!(&blk)
+  def filter(&blk)
     @registry.each do |fqdn, registrant|
       if blk.call(fqdn, registrant)
         $logger.warn "Closing connection: #{fqdn}."
@@ -32,7 +32,7 @@ class NIOActor
       $logger.debug "Reading heartbeat data."
       heartbeat = (heartbeat_monitor.io.gets || "").strip
       if heartbeat == "OK"
-        $logger.debug "#{fqdn} doing OK."; @registry.beat!(fqdn)
+        $logger.debug "#{fqdn} doing OK."; @registry.beat(fqdn)
       else
         $logger.error "Message from #{fqdn}: #{heartbeat}."
         wipe(fqdn, connection)

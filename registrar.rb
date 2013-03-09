@@ -19,7 +19,7 @@ class Registrar
       @payload["heartbeat_timestamp"]
     end
     
-    def refresh_timestamp!
+    def refresh_timestamp
       @payload["heartbeat_timestamp"] = Time.now.to_i
     end
   end
@@ -37,7 +37,7 @@ class Registrar
     if @registry[fqdn = (registrant = Registrant.new(opts)).fqdn]
       abort DoubleRegistrationAttempt.new("#{fqdn} tried to double register.")
     else
-      registrant.refresh_timestamp!; @registry[fqdn] = registrant
+      registrant.refresh_timestamp; @registry[fqdn] = registrant
     end
   end
   
@@ -49,7 +49,7 @@ class Registrar
     @registry[fqdn].connection.close; @registry.delete(fqdn)
   end
   
-  def beat!(fqdn)
-    @registry[fqdn].refresh_timestamp!
+  def beat(fqdn)
+    @registry[fqdn].refresh_timestamp
   end
 end

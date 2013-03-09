@@ -57,7 +57,7 @@ module ServerRegistrationHeartbeatStateMachine
     Thread.new do
       loop do
         sleep 120; $logger.debug "Culling registrants."
-        @heartbeat_selector.filter!(&culler)
+        @heartbeat_selector.filter(&culler)
       end
     end
   end
