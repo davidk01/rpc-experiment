@@ -1,16 +1,12 @@
-require 'msgpack'
-require 'resolv'
-require 'resolv-replace'
-require 'socket'
-require 'celluloid'
-require 'logger'
-require_relative './dispatcher'
+['msgpack', 'resolv', 'resolv-replace', 'socket',
+ 'celluloid', 'logger'].each {|e| require e}
+['./dispatcher'].each {|e| require_relative e}
 $logger = Logger.new(STDOUT, 'daily')
-
 # die as soon as possible
 Thread.abort_on_exception = true
 
 module ClientRegistrationHeartbeatStateMachine
+  
   def self.start
     register; establish_heartbeat; accept_rpc_requests
   end
@@ -65,6 +61,7 @@ module ClientRegistrationHeartbeatStateMachine
       end
     end
   end
+  
 end
 
 ClientRegistrationHeartbeatStateMachine.start

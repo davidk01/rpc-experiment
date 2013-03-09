@@ -1,6 +1,3 @@
-# dispatcher knows where to load plugins from
-require_relative './plugins'
-
 class Dispatcher
   include Celluloid
   

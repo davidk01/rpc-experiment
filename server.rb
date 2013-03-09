@@ -1,15 +1,7 @@
-require 'msgpack'
-require 'socket'
-require 'thread'
-require 'resolv'
-require 'resolv-replace'
-require 'nio'
-require 'celluloid'
-require 'logger'
-require_relative './registrar'
-require_relative './nioactor'
+['msgpack', 'socket', 'thread', 'resolv', 'resolv-replace',
+ 'nio', 'celluloid', 'logger'].each {|e| require e}
+['./registrar', './nioactor'].each {|e| require_relative e}
 $logger = Logger.new(STDOUT, 'daily')
-
 # die as soon as possible
 Thread.abort_on_exception = true
 

@@ -1,4 +1,5 @@
 module PluginComponents
+
   class ActionArgumentRequiredError < StandardError; end
   
   class Plugin
@@ -30,6 +31,7 @@ module PluginComponents
 end
 
 module Plugins
+
   class NoPluginError < StandardError; end
   class PluginDefinedTwiceError < StandardError; end
   
@@ -64,4 +66,5 @@ module Plugins
       @actions
     end
   end
+  
 end
