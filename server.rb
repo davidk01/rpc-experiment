@@ -56,7 +56,7 @@ module ServerRegistrationHeartbeatStateMachine
     culler = proc {|fqdn, registrant| Time.now.to_i - registrant.latest_timestamp > 5 * 60}
     Thread.new do
       loop do
-        sleep 120; $logger.debug "Culling registrants.";
+        sleep 120; $logger.debug "Culling registrants."
         @heartbeat_selector.filter!(&culler)
       end
     end

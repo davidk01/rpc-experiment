@@ -56,7 +56,7 @@ module ClientRegistrationHeartbeatStateMachine
   def self.accept_rpc_requests
     Thread.new do
       $logger.info "Accepting rpc requests."
-      dispatcher = PluginActionDispatcher.new
+      dispatcher = ::Dispatcher.new
       Socket.tcp_server_loop(3001) do |conn|
         payload = MessagePack.unpack(conn.gets.strip)
         results = dispatcher.dispatch(payload)

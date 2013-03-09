@@ -37,7 +37,7 @@ class Registrar
     if @registry[fqdn = (registrant = Registrant.new(opts)).fqdn]
       abort DoubleRegistrationAttempt.new("#{fqdn} tried to double register.")
     else
-      registrant.refresh_timestamp; @registry[fqdn] = registrant
+      registrant.refresh_timestamp!; @registry[fqdn] = registrant
     end
   end
   
