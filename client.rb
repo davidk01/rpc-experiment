@@ -19,9 +19,9 @@ module ClientRegistrationHeartbeatStateMachine
       @conn.puts({
         "agent_dispatch_port" => 3001,
       }.to_msgpack)
-    rescue Errno::ECONNREFUSED
+    rescue Errno::ECONNREFUSED, Errno::EPIPE
       wait_period = 5
-      $logger.error "Registration connection refused. Retrying in #{wait_period} seconds."
+      $logger.error "Registration connection refused or broken. Retrying in #{wait_period} seconds."
       sleep wait_period; retry
     end
   end
