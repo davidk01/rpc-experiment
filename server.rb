@@ -8,7 +8,7 @@ require 'celluloid'
 require 'logger'
 require_relative './registrar'
 require_relative './nioactor'
-$logger = Logger.new('/var/log/rpc-registry.log', 'daily')
+$logger = Logger.new(STDOUT, 'daily')
 
 # die as soon as possible
 Thread.abort_on_exception = true

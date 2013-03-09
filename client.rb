@@ -5,7 +5,7 @@ require 'socket'
 require 'celluloid'
 require 'logger'
 require_relative './dispatcher'
-$logger = Logger.new('/var/log/rpc-client.log', 'daily')
+$logger = Logger.new(STDOUT, 'daily')
 
 # die as soon as possible
 Thread.abort_on_exception = true
@@ -40,8 +40,6 @@ module ClientRegistrationHeartbeatStateMachine
           sleep 5
         rescue Errno::EPIPE
           $logger.error "Looks like the registry died."; break
-        ensure
-          @conn.close
         end
       end
       restart_heartbeat
