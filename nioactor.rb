@@ -24,7 +24,11 @@ class NIOActor
   end
   
   def register_connection(payload, fqdn, connection)
-    @registry.register(:payload => payload, :connection => connection)
+    begin
+      @registry.register(:payload => payload, :connection => connection)
+    rescue Exception => e
+      abort e
+    end
     $logger.debug "Adding connection to selector loop."
     heartbeat_monitor = @selector_loop.register(connection, :r)
     $logger.debug "Connection added to selector loop."
