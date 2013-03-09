@@ -42,12 +42,7 @@ module ServerRegistrationHeartbeatStateMachine
     $logger.debug "Registration request: #{connection}."
     payload = MessagePack.unpack(connection.gets.strip)
     fqdn = payload["fqdn"] = connection.remote_address.getnameinfo[0]
-    begin
-      @heartbeat_selector.register_connection(payload, fqdn, connection)
-    rescue DoubleRegistrationAttempt
-      $logger.error "Double registration attempt. Cleaning up and retrying."
-      @heartbeat_selector.wipe(fqdn); retry
-    end
+    @heartbeat_selector.register_connection(payload, fqdn, connection)
   end
   
   # anything older than 5 minutes dies
