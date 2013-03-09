@@ -23,14 +23,13 @@ class NIOActor
     @selector_loop.deregister(connection); @registry.delete(fqdn); connection.close
   end
   
+  # TODO: Clean this up a little bit doesn't feel as clean as it should
   def register_connection(payload, fqdn, connection)
     begin
       @registry.register(:payload => payload, :connection => connection)
     rescue DoubleRegistrationAttempt => e
-      $logger.error e.message
-      $logger.warn "Closing connection: #{connection}."
-      connection.close
-      return
+      $logger.error e.message; $logger.warn "Closing connection: #{connection}."
+      connection.close; return
     end
     $logger.debug "Adding connection to selector loop."
     heartbeat_monitor = @selector_loop.register(connection, :r)
@@ -46,4 +45,5 @@ class NIOActor
       end
     end
   end
+  
 end
