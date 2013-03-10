@@ -35,9 +35,7 @@ module ServerRegistrationHeartbeatStateMachine
   def self.registration_handler(connection)
     $logger.debug "Registration request: #{connection}."
     begin
-      payload_length = connection.readpartial(4).unpack("*i")[0]
-      serialized_payload = connection.readpartial(payload_length)
-      payload = MessagePack.unpack(serialized_payload)
+      payload = registration_message_deserializer(connection)
     rescue MessagePack::MalformedFormatError
       $logger.error "MessagePack couldn't parse message: #{serialized_payload}."
       $logger.warn "Closing registration connection because of malformed data."
@@ -45,6 +43,23 @@ module ServerRegistrationHeartbeatStateMachine
     else
       @heartbeat_selector.register_connection(payload, connection)
     end
+  end
+  
+  def self.read_partial_until(wanted_buffer_length, connection)
+    $logger.debug "Wanted buffer length: #{wanted_buffer_length}."
+    buffer = ""
+    while (current_buff_length = buffer.length) < wanted_buffer_length
+      $logger.debug "Current buffer length: #{current_buff_length}."
+      buffer << connection.readpartial(wanted_buffer_length - current_buff_length)
+    end
+    buffer
+  end
+  
+  def self.registration_message_deserializer(connection)
+    payload_length_buffer = read_partial_until(4, connection)
+    payload_length = payload_length_buffer.unpack("*i")[0]
+    serialized_message_buffer = read_partial_until(payload_length, connection)
+    MessagePack.unpack(serialized_message_buffer)
   end
   
   # TODO: Registration should follow some well defined protocol
