@@ -33,6 +33,19 @@ class PartialReaderDSL
     @return_stack = []
   end
   
+  def current_instruction
+    @instruction_sequence[@current_instruction_pointer]
+  end
+  
+  def call(connection)
+    if (current_instr = current_instruction).nil?
+      return @return_stack
+    end
+    res = current_instr.call(connection)
+    return if res.empty?
+    @instruction_pointer += 1
+  end
+  
   def consume(count)
     @instruction_sequence << Consumer.new(count)
   end
