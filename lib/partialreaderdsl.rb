@@ -1,24 +1,38 @@
+module PartialReaderDSL
+
 class Instruction; end
 
 class Consumer < Instruction
   
   def initialize(count)
-    @count, @buffer = count, ""
+    @count = count
   end
   
-  def call(connection)
-    return_value = nil
-    if @buffer.length < @count
-      @buffer << connection.readpartial(@count - @buffer.length)
+  def call(context, connection)
+    return_value = :call_again
+    if (buffer = context.buffer).length < @count
+      buffer << connection.readpartial(@count - buffer.length)
     else
-      return_value = [@buffer, :done]
+      return_value = :done
     end
     return_value
   end
   
 end
 
-class PartialReaderDSL
+class BufferTransform < Instruction
+  
+  def initialize(&blk)
+    @blk = blk
+  end
+  
+  def call(context, connection)
+    context.return @blk.call(context, connection); context.empty_buffer!; :delay_call
+  end
+  
+end
+
+class PartialReaderMachine
   
   def self.protocol(&blk)
     current_instance = new
@@ -26,11 +40,11 @@ class PartialReaderDSL
     current_instance
   end
   
+  attr_reader :buffer, :return_stack
+  
   def initialize
-    @buffer = ""
-    @instruction_sequence = []
-    @current_instruction_pointer = 0
-    @return_stack = []
+    @buffer, @return_stack = "", []
+    @instruction_sequence, @current_instruction_pointer = [], 0
   end
   
   def current_instruction
@@ -41,24 +55,38 @@ class PartialReaderDSL
     if (current_instr = current_instruction).nil?
       return @return_stack
     end
-    res = current_instr.call(connection)
-    return if res.empty?
-    @instruction_pointer += 1
+    case (status = current_instr.call(self, connection))
+    when :done
+      @instruction_pointer += 1
+      call(connection)
+    when :delay_call
+      @instruction_pointer += 1
+    when :call_again
+    else
+      throw :unknown_return_code, status
+    end
   end
   
   def consume(count)
     @instruction_sequence << Consumer.new(count)
   end
   
-  def buffer_transform(&blk)
-    @return_stack << blk.call(self)
+  def return(value)
+    @return_stack << value
   end
   
-  def splice(*instructions)
-    current_instruction = @insturction_sequence[@current_instruction_pointer]
-    instructions.unshift(current_instruction)
-    @instruction_sequence[@current_instruction_pointer] = instructions
-    @instruction_sequence.flatten!
+  def buffer_transform(&blk)
+    @instruction_sequence << BufferTransform.new(&blk)
   end
-    
+  
+  def empty_buffer!
+    @buffer.replace ''
+  end
+  
+  def jump(pos)
+    @current_instruction_pointer = pos
+  end
+  
+end
+
 end
