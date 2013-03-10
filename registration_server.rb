@@ -1,11 +1,33 @@
 ['msgpack', 'socket', 'thread', 'resolv', 'resolv-replace',
- 'nio', 'celluloid', 'logger'].each {|e| require e}
+ 'nio', 'celluloid', 'logger', 'timeout'].each {|e| require e}
 ['./registrar', './nioactor'].each {|e| require_relative e}
 $logger = Logger.new(STDOUT, 'daily')
 # die as soon as possible
 Thread.abort_on_exception = true
 
 module ServerRegistrationHeartbeatStateMachine
+  
+  class RegistrationTimeout < StandardError; end
+  
+  # Handles nonsense related to readpartial and various other
+  # socket vagaries.
+  class PartialReader
+  
+    def initialize(connection)
+      @connection = connection
+    end
+  
+    def read_partial_until(wanted_buffer_length)
+      $logger.debug "Wanted buffer length: #{wanted_buffer_length}."
+      buffer = ""
+      while (current_buff_length = buffer.length) < wanted_buffer_length
+        $logger.debug "Current buffer length: #{current_buff_length}."
+        buffer << @connection.readpartial(wanted_buffer_length - current_buff_length)
+      end
+      buffer
+    end
+    
+  end
   
   @heartbeat_selector = NIOActor.new
   
@@ -39,6 +61,8 @@ module ServerRegistrationHeartbeatStateMachine
     rescue MessagePack::MalformedFormatError
       $logger.error "MessagePack couldn't parse message: #{serialized_payload}."
       $logger.warn "Malformed data."; connection.close
+    rescue RegistrationTimeout
+      $logger.error "Registration timed out."; connection.close
     rescue EOFError
       $logger.error "Couldn't read enough of the registration message."; connection.close
     else
@@ -46,19 +70,13 @@ module ServerRegistrationHeartbeatStateMachine
     end
   end
   
-  def self.read_partial_until(wanted_buffer_length, connection)
-    $logger.debug "Wanted buffer length: #{wanted_buffer_length}."
-    buffer = ""
-    while (current_buff_length = buffer.length) < wanted_buffer_length
-      $logger.debug "Current buffer length: #{current_buff_length}."
-      buffer << connection.readpartial(wanted_buffer_length - current_buff_length)
-    end
-    buffer
-  end
-  
+  # TODO: Make the registration timeout configurable
   def self.registration_message_deserializer(connection)
-    payload_length = read_partial_until(4, connection).unpack("*i")[0]
-    MessagePack.unpack(read_partial_until(payload_length, connection))
+    Timeout::timeout(5, RegistrationTimeout) do
+      partial_reader = PartialReader.new(connection)
+      payload_length = partial_reader.read_partial_until(4).unpack("*i")[0]
+      MessagePack.unpack(partial_reader.read_partial_until(payload_length))
+    end
   end
   
   # TODO: Registration should follow some well defined protocol
