@@ -1,6 +1,7 @@
 ['msgpack', 'socket', 'thread', 'resolv', 'resolv-replace',
  'nio', 'celluloid', 'logger', 'timeout'].each {|e| require e}
-['./registrar', './nioactor', './partialreader'].each {|e| require_relative e}
+['./registrar', './nioactor', './partialreader',
+ './heartbeatcallback'].each {|e| require_relative e}
 $logger = Logger.new(STDOUT, 'daily')
 # die as soon as possible
 Thread.abort_on_exception = true
