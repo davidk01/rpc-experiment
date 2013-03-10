@@ -32,7 +32,7 @@ class NIOActor
       if heartbeat == "OK"
         $logger.debug "#{fqdn} is OK."; @registry.beat(fqdn)
       else
-        $logger.error "Message from #{fqdn}: #{hearbeat}."; wipe(fqdn)
+        $logger.error "Message from #{fqdn}: #{heartbeat}."; wipe(fqdn)
       end
     end
   end
