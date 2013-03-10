@@ -28,7 +28,7 @@ class NIOActor
     fqdn = monitor.io.remote_address.getnameinfo[0]
     monitor.value = proc do
       $logger.debug "Reading heartbeat data."
-      heartbeat = (monitor.io.gets || "").strip
+      heartbeat = (monitor.io.readpartial(2) rescue nil || "")
       if heartbeat == "OK"
         $logger.debug "#{fqdn} is OK."; @registry.beat(fqdn)
       else

@@ -34,7 +34,7 @@ module ClientRegistrationHeartbeatStateMachine
       loop do
         $logger.debug "Heartbeat."
         begin
-          @conn.puts "OK"; @conn.flush
+          @conn.write "OK"; @conn.flush
           sleep 5
         rescue Errno::EPIPE
           $logger.error "Looks like the registry died."; break
