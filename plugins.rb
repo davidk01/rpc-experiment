@@ -1,3 +1,6 @@
+# Each plugin should be self-documenting as far as
+# possible and all the various classes for the self-documenting
+# pieces should go here.
 module PluginComponents
 
   class ActionArgumentRequiredError < StandardError; end
@@ -30,6 +33,8 @@ module PluginComponents
   
 end
 
+# Simple plugin management system that uses various module hooks
+# to handle plugin registration and plugin action definition.
 module Plugins
 
   class NoPluginError < StandardError; end

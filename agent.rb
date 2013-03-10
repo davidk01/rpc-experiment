@@ -11,7 +11,8 @@ module ClientRegistrationHeartbeatStateMachine
     register; establish_heartbeat; accept_rpc_requests
   end
   
-  # keep trying until we successfully register
+  # TODO: Make the agent dispatch port configurable
+  # TODO: Make the retry frequency configurable
   def self.register
     begin
       @conn = Socket.tcp('localhost', 3000)
@@ -26,7 +27,7 @@ module ClientRegistrationHeartbeatStateMachine
     end
   end
   
-  # send "OK" every X number of seconds
+  # TODO: Make heartbeat frequency configurable
   def self.establish_heartbeat
     @heartbeat_thread = Thread.new do
       loop do
@@ -35,9 +36,11 @@ module ClientRegistrationHeartbeatStateMachine
           @conn.puts "OK"; @conn.flush
           sleep 5
         rescue Errno::EPIPE
-          $logger.error "Looks like the registry died."; break
+          $logger.error "Looks like the registry died."
         rescue Errno::ECONNRESET
-          $logger.error "Registry closed connection on us."; break
+          $logger.error "Registry closed connection on us."
+        ensure
+          break
         end
       end
       restart_heartbeat
@@ -49,15 +52,19 @@ module ClientRegistrationHeartbeatStateMachine
     register; establish_heartbeat
   end
   
+  # TODO: Make rpc port configurable and the same
+  # as what is sent out during the registration attempt.
   def self.accept_rpc_requests
     Thread.new do
       $logger.info "Accepting rpc requests."
       dispatcher = ::Dispatcher.new('asdf')
       Socket.tcp_server_loop(3001) do |conn|
+        # TODO: Unpacking can fail so figure out how to handle that
+        # TODO: Make sure dispatcher does validation
         payload = MessagePack.unpack(conn.gets.strip)
         results = dispatcher.dispatch(payload)
-        conn.puts results.to_msgpack; conn.flush
-        conn.close
+        # TODO: This can fail so make it more robust, e.g. broken pipe, connection reset, etc.
+        conn.puts results.to_msgpack; conn.flush; conn.close
       end
     end
   end
