@@ -4,11 +4,9 @@ class Registrar
   
   class Registrant
     attr_reader :connection
-    def initialize(opts = {})
-      [:payload, :connection].each do |e|
-        raise ArgumentError, "#{e} is a required argument." if opts[e].nil?
-      end
-      @connection, @payload = opts[:connection], opts[:payload]
+    
+    def initialize(payload, connection)
+      @connection, @payload = connection, payload
     end
     
     def fqdn
@@ -22,6 +20,7 @@ class Registrar
     def refresh_timestamp
       @payload["heartbeat_timestamp"] = Time.now.to_i
     end
+    
   end
 
 end
@@ -32,8 +31,8 @@ class Registrar
     @registry = {}
   end
   
-  def register(opts = {})
-    if @registry[fqdn = (registrant = Registrant.new(opts)).fqdn]
+  def register(payload, connection)
+    if @registry[fqdn = (registrant = Registrant.new(payload, connection)).fqdn]
       abort DoubleRegistrationAttempt.new("#{fqdn} tried to double register.")
     else
       registrant.refresh_timestamp; @registry[fqdn] = registrant

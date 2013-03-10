@@ -24,26 +24,29 @@ class NIOActor
     @selector_loop.deregister(connection); @registry.delete(fqdn); connection.close
   end
   
-  def loop_registration(connection)
-    fqdn = connection.remote_address.getnameinfo[0]
-    $logger.debug "Adding connection to selector loop."
-    heartbeat_monitor = @selector_loop.register(connection, :r)
-    $logger.debug "Connection added to selector loop."
-    heartbeat_monitor.value = proc do
+  def attach_callback(monitor, fqdn)
+    fqdn = monitor.io.remote_address.getnameinfo[0]
+    monitor.value = proc do
       $logger.debug "Reading heartbeat data."
-      heartbeat = (heartbeat_monitor.io.gets || "").strip
+      heartbeat = (monitor.io.gets || "").strip
       if heartbeat == "OK"
-        $logger.debug "#{fqdn} doing OK."; @registry.beat(fqdn)
+        $logger.debug "#{fqdn} is OK."; @registry.beat(fqdn)
       else
-        $logger.error "Message from #{fqdn}: #{heartbeat}."; wipe(fqdn)
+        $logger.error "Message from #{fqdn}: #{hearbeat}."; wipe(fqdn)
       end
     end
   end
   
-  # TODO: Clean this up a little bit doesn't feel as clean as it should
+  def loop_registration(connection)
+    $logger.debug "Adding connection to selector loop."
+    heartbeat_monitor = @selector_loop.register(connection, :r)
+    $logger.debug "Connection added to selector loop."
+    attach_callback(heartbeat_monitor)
+  end
+  
   def register_connection(payload, connection)
     begin
-      @registry.register(:payload => payload, :connection => connection)
+      @registry.register(payload, connection)
     rescue DoubleRegistrationAttempt => e
       $logger.error e.message; $logger.warn "Closing connection: #{connection}."
       connection.close; return
