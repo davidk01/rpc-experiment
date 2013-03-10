@@ -8,9 +8,9 @@ class HeartbeatCallback
     $logger.debug "Reading heartbeat data."
     heartbeat = (monitor.io.readpartial(2) rescue nil || "")
     if heartbeat == "OK"
-      $logger.debug "#{fqdn} is OK."; @beat.call
+      $logger.debug "#{monitor.io} is OK."; @beat.call
     else
-      $logger.error "Message from #{fqdn}: #{heartbeat}."; @wipe.call
+      $logger.error "Message from #{monitor.io}: #{heartbeat}."; @wipe.call
     end
   end
   
