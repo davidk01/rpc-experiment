@@ -27,7 +27,7 @@ class BufferTransform < Instruction
   end
   
   def call(context, connection)
-    context.return @blk.call(context); context.empty_buffer!; :delay_call
+    @blk.call(context); context.empty_buffer!; :delay_call
   end
   
 end
@@ -44,11 +44,11 @@ class PartialReaderMachine
   
   def initialize
     @buffer, @return_stack = "", []
-    @instruction_sequence, @current_instruction_pointer = [], 0
+    @instruction_sequence, @instruction_pointer = [], 0
   end
   
   def current_instruction
-    @instruction_sequence[@current_instruction_pointer]
+    @instruction_sequence[@instruction_pointer]
   end
   
   def call(connection)
@@ -84,7 +84,7 @@ class PartialReaderMachine
   end
   
   def jump(pos)
-    @current_instruction_pointer = pos
+    @instruction_pointer = pos
   end
   
 end
