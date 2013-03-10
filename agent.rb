@@ -17,9 +17,10 @@ module ClientRegistrationHeartbeatStateMachine
     begin
       @conn = Socket.tcp('localhost', 3000)
       $logger.debug "Registering."
-      @conn.puts({
-        "agent_dispatch_port" => 3001,
-      }.to_msgpack)
+      payload = {
+        "agent_dispatch_port" => 3001
+      }.to_msgpack
+      @conn.write [payload.length].pack("*i") + payload
     rescue Errno::ECONNREFUSED, Errno::EPIPE
       wait_period = 5
       $logger.error "Registration connection refused or broken. Retrying in #{wait_period} seconds."

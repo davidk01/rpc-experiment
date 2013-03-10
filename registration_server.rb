@@ -34,9 +34,9 @@ module ServerRegistrationHeartbeatStateMachine
   
   def self.registration_handler(connection)
     $logger.debug "Registration request: #{connection}."
-    # TODO: This can fail. Figure out how to handle it.
     begin
-      serialized_payload = connection.gets.strip
+      payload_length = connection.readpartial(4).unpack("*i")[0]
+      serialized_payload = connection.readpartial(payload_length)
       payload = MessagePack.unpack(serialized_payload)
     rescue MessagePack::MalformedFormatError
       $logger.error "MessagePack couldn't parse message: #{serialized_payload}."
