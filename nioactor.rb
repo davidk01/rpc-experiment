@@ -24,7 +24,7 @@ class NIOActor
     @selector_loop.deregister(connection); @registry.delete(fqdn); connection.close
   end
   
-  def attach_callback(monitor, fqdn)
+  def attach_callback(monitor)
     fqdn = monitor.io.remote_address.getnameinfo[0]
     monitor.value = proc do
       $logger.debug "Reading heartbeat data."
