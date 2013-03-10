@@ -15,7 +15,7 @@ class NIOActor
   end
   
   def tick
-    @selector_loop.select(1) {|m| m.value.call}
+    @selector_loop.select(1) {|m| m.value.call(m)}
   end
   
   def wipe(fqdn)
@@ -26,15 +26,7 @@ class NIOActor
   
   def attach_callback(monitor)
     fqdn = monitor.io.remote_address.getnameinfo[0]
-    monitor.value = proc do
-      $logger.debug "Reading heartbeat data."
-      heartbeat = (monitor.io.readpartial(2) rescue nil || "")
-      if heartbeat == "OK"
-        $logger.debug "#{fqdn} is OK."; @registry.beat(fqdn)
-      else
-        $logger.error "Message from #{fqdn}: #{heartbeat}."; wipe(fqdn)
-      end
-    end
+    monitor.value = HeartbeatCallback.new(proc { @registry.beat(fqdn) }, proc { wipe(fqdn) })
   end
   
   def loop_registration(connection)
