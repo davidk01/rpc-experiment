@@ -12,7 +12,7 @@ class Registrar
     end
     
     def fqdn
-      @payload["fqdn"]
+      @fqdn ||= connection.remote_address.getnameinfo[0]
     end
     
     def latest_timestamp
