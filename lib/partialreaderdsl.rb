@@ -11,7 +11,7 @@ class Consumer < Instruction
   def call(context, connection)
     return_value = :call_again
     if (buffer = context.buffer).length < @count
-      buffer << connection.readpartial(@count - buffer.length)
+      context.buffer << connection.readpartial(@count - buffer.length)
     else
       return_value = :done
     end
@@ -27,7 +27,7 @@ class BufferTransform < Instruction
   end
   
   def call(context, connection)
-    context.return @blk.call(context, connection); context.empty_buffer!; :delay_call
+    context.return @blk.call(context); context.empty_buffer!; :delay_call
   end
   
 end
