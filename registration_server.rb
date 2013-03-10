@@ -40,6 +40,9 @@ module ServerRegistrationHeartbeatStateMachine
       $logger.error "MessagePack couldn't parse message: #{serialized_payload}."
       $logger.warn "Closing registration connection because of malformed data."
       connection.close
+    rescue EOFError
+      $logger.error "Couldn't read enough of the registration message before connection was close."
+      connection.close
     else
       @heartbeat_selector.register_connection(payload, connection)
     end
