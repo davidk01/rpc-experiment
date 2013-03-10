@@ -43,7 +43,7 @@ class Registrar
   
   def register(payload, connection)
     if @registry[fqdn = (registrant = Registrant.new(payload, connection)).fqdn]
-      abort DoubleRegistrationAttempt.new("#{fqdn} tried to double register.")
+      raise DoubleRegistrationAttempt.new("#{fqdn} tried to double register.")
     else
       registrant.refresh_timestamp; @registry[fqdn] = registrant
     end
