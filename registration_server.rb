@@ -39,7 +39,7 @@ module ServerRegistrationHeartbeatStateMachine
   # anything older than 5 minutes dies
   def self.culling_loop
     $logger.debug "Starting connection killer."
-    culler = proc {|fqdn, registrant| Time.now.to_i - registrant.latest_timestamp > 5 * 60}
+    culler = proc {|registrant| Time.now.to_i - registrant.latest_timestamp > 5 * 60}
     Thread.new do
       loop do
         sleep 120; $logger.debug "Culling registrants."

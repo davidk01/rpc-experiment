@@ -1,3 +1,6 @@
+# The whole point of this class is to handle registration and heartbeat
+# related activities so anything that doesn't fall in those two buckets
+# needs to go somewhere else.
 class NIOActor
   include Celluloid
   
@@ -7,9 +10,7 @@ class NIOActor
   
   def filter(&blk)
     @registry.each do |fqdn, registrant|
-      if blk.call(fqdn, registrant)
-        $logger.warn "Closing connection: #{fqdn}."; wipe(fqdn)
-      end
+      ($logger.warn "Closing connection: #{fqdn}."; wipe(fqdn)) if blk.call(registrant)
     end
   end
   
@@ -34,8 +35,7 @@ class NIOActor
       if heartbeat == "OK"
         $logger.debug "#{fqdn} doing OK."; @registry.beat(fqdn)
       else
-        $logger.error "Message from #{fqdn}: #{heartbeat}."
-        wipe(fqdn)
+        $logger.error "Message from #{fqdn}: #{heartbeat}."; wipe(fqdn)
       end
     end
   end
