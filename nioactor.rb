@@ -24,7 +24,8 @@ class NIOActor
   end
   
   # TODO: Clean this up a little bit doesn't feel as clean as it should
-  def register_connection(payload, fqdn, connection)
+  def register_connection(payload, connection)
+    fqdn = payload["fqdn"] = connection.remote_address.getnameinfo[0]
     begin
       @registry.register(:payload => payload, :connection => connection)
     rescue DoubleRegistrationAttempt => e

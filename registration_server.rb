@@ -33,8 +33,7 @@ module ServerRegistrationHeartbeatStateMachine
   def self.registration_handler(connection)
     $logger.debug "Registration request: #{connection}."
     payload = MessagePack.unpack(connection.gets.strip)
-    fqdn = payload["fqdn"] = connection.remote_address.getnameinfo[0]
-    @heartbeat_selector.register_connection(payload, fqdn, connection)
+    @heartbeat_selector.register_connection(payload, connection)
   end
   
   # anything older than 5 minutes dies
