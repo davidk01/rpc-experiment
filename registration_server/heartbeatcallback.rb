@@ -6,7 +6,7 @@ class HeartbeatCallback
       m.consume(2)
       m.buffer_transform do |context|
         if context.buffer == "OK"
-          $logger.debug "Heartbeat OK. Reseting machine."
+          $logger.debug "Heartbeat OK. Resetting machine."
           beat.call; m.jump(-1)
         else
           $logger.error "Did not recognize heartbeat message: #{context.buffer}."
