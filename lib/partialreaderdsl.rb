@@ -10,10 +10,11 @@ class Consumer < Instruction
   
   def call(context, connection)
     return_value = :call_again
-    if (buffer = context.buffer).length < @count
-      context.buffer << connection.readpartial(@count - buffer.length)
-    else
-      return_value = :done
+    if (delta = @count - context.buffer.length) > 0
+      context.buffer << connection.readpartial(delta)
+      if context.buffer.length == @count
+        return_value = :done
+      end
     end
     return_value
   end
