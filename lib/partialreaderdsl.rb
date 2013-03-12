@@ -58,18 +58,22 @@ class PartialReaderMachine
     
   end
 
+  class BufferTransformContext
+  end
+  
   def self.protocol(&blk)
     current_instance = new
     blk.call(Instantiator.new(current_instance))
     current_instance
   end
   
-  attr_reader :buffer, :return_stack
+  attr_reader :buffer, :return_stack, :instruction_pointer
   
   def initialize
     @buffer, @return_stack = "", []
     @instruction_sequence, @instruction_pointer = [], 0
   end
+  
   
   def current_instruction
     @instruction_sequence[@instruction_pointer]
@@ -89,9 +93,10 @@ class PartialReaderMachine
     else
       throw :unknown_return_code, status
     end
+    :not_done
   end
   
-  def consume(count)
+  def consume(count = @return_stack.pop)
     @instruction_sequence << Consumer.new(count)
   end
   

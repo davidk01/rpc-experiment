@@ -1,7 +1,7 @@
 ['msgpack', 'socket', 'thread', 'resolv', 'resolv-replace',
  'nio', 'celluloid', 'logger', 'timeout'].each {|e| require e}
-['./registrar', './nioactor', '../lib/partialreader',
- './heartbeatcallback', '../lib/partialreaderdsl'].each {|e| require_relative e}
+['./registrar', './nioactor', './heartbeatcallback',
+ '../lib/partialreaderdsl'].each {|e| require_relative e}
 $logger = Logger.new(STDOUT, 'daily')
 # die as soon as possible
 Thread.abort_on_exception = true
@@ -53,11 +53,30 @@ module ServerRegistrationHeartbeatStateMachine
   
   # TODO: Make the registration timeout configurable
   def self.registration_message_deserializer(connection)
-    Timeout::timeout(5, RegistrationTimeout) do
-      partial_reader = PartialReader.new(connection)
-      payload_length = partial_reader.read_partial_until(4).unpack("*i")[0]
-      MessagePack.unpack(partial_reader.read_partial_until(payload_length))
+    machine = PartialReaderDSL::PartialReaderMachine.protocol do |m|
+      m.consume(4); m.buffer_transform {|ctx|
+        ctx.return ctx.buffer.unpack("*i")[0]
+      }
+      m.consume; m.buffer_transform {|ctx|
+        ctx.return MessagePack.unpack(ctx.buffer)
+      }
     end
+    Timeout::timeout(5, RegistrationTimeout) do
+      begin
+        res = machine.call(connection)
+      end while res == :not_done
+      res[0]
+    end
+  end
+  
+  def self.read_partial_until(wanted_buffer_length, connection)
+    $logger.debug "Wanted buffer length: #{wanted_buffer_length}."
+    buffer = ""
+    while (current_buff_length = buffer.length) < wanted_buffer_length
+      $logger.debug "Current buffer length: #{current_buff_length}."
+      buffer << connection.readpartial(wanted_buffer_length - current_buff_length)
+    end
+    buffer
   end
   
   # TODO: Registration should follow some well defined protocol
