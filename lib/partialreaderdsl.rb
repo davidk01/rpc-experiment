@@ -46,11 +46,8 @@ class PartialReaderMachine
   
   def self.protocol(&blk)
     current_instance = new
-    current_instance.singleton_class.class_eval do
-      define_method(:instantiator, &blk)
-    end
-    current_instance.instantiator
-    current_instance
+    current_instance.singleton_class.class_eval { define_method(:instantiator, &blk) }
+    current_instance.instantiator; current_instance
   end
   
   attr_reader :buffer, :return_stack, :instruction_pointer
@@ -91,7 +88,7 @@ class PartialReaderMachine
   end
   
   def buffer_transform(&blk)
-    @instruction_sequence << BufferTransform.new(&blk)
+    transformer = BufferTransform.new(&blk); @instruction_sequence << transformer; transformer
   end
   
   def empty_buffer!
