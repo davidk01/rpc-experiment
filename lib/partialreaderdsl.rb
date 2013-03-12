@@ -48,8 +48,8 @@ class PartialReaderMachine
       @machine = machine
     end
     
-    def consume(count)
-      @machine.consume(count)
+    def consume(count = nil)
+      count ? @machine.consume(count) : @machine.consume
     end
     
     def buffer_transform(&blk)
