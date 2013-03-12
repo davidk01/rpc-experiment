@@ -5,7 +5,7 @@ class HeartbeatCallback
     @machine = PartialReaderDSL::PartialReaderMachine.protocol do
       consume(2); buffer_transform do |ctx|
         if ctx.buffer == "OK"
-          $logger.debug "Heartbeat OK. Resetting machine."
+          $logger.debug "Heartbeat OK. Updating timestamp and resetting machine."
           beat.call; ctx.jump(-1)
         else
           $logger.error "Did not recognize heartbeat message: #{ctx.buffer}."
