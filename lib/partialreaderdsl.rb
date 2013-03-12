@@ -49,11 +49,11 @@ class PartialReaderMachine
     end
     
     def consume(count)
-      machine.consume(count)
+      @machine.consume(count)
     end
     
     def buffer_transform(&blk)
-      machine.buffer_transform(&blk)
+      @machine.buffer_transform(&blk)
     end
     
   end
