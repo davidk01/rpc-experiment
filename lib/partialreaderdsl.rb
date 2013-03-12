@@ -53,7 +53,7 @@ class PartialReaderMachine
     end
     
     def buffer_transform(&blk)
-      mahcine.buffer_transform(&blk)
+      machine.buffer_transform(&blk)
     end
     
   end
