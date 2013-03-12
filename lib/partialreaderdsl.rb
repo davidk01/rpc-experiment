@@ -8,7 +8,7 @@ class Consumer < Instruction
     @count = count
   end
   
-  def >>(&blk)
+  def >>(blk)
     @blk = blk
   end
   
