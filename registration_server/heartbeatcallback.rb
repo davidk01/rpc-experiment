@@ -4,12 +4,12 @@ class HeartbeatCallback
     @wipe = wipe
     @machine = PartialReaderDSL::PartialReaderMachine.protocol do |m|
       m.consume(2)
-      m.buffer_transform do |context|
-        if context.buffer == "OK"
+      m.buffer_transform do |ctx|
+        if ctx.buffer == "OK"
           $logger.debug "Heartbeat OK. Resetting machine."
-          beat.call; m.jump(-1)
+          beat.call; ctx.jump(-1)
         else
-          $logger.error "Did not recognize heartbeat message: #{context.buffer}."
+          $logger.error "Did not recognize heartbeat message: #{ctx.buffer}."
           wipe.call
         end
       end

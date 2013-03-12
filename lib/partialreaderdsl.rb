@@ -35,35 +35,9 @@ end
 
 class PartialReaderMachine
   
-  # Many operations of the machine don't make any sense
-  # in a protocol definition block so instead of passing
-  # the entire machine to the definition block we only
-  # pass the Instatitor instance which limits the operations
-  # we can perform. TODO: This should also be done for a buffer
-  # transformation call because many operations don't make sense
-  # during buffer transformation.
-  class Instantiator
-    
-    def initialize(machine)
-      @machine = machine
-    end
-    
-    def consume(count = nil)
-      @machine.consume(count)
-    end
-    
-    def buffer_transform(&blk)
-      @machine.buffer_transform(&blk)
-    end
-    
-  end
-
-  class BufferTransformContext
-  end
-  
   def self.protocol(&blk)
     current_instance = new
-    blk.call(Instantiator.new(current_instance))
+    blk.call(current_instance)
     current_instance
   end
   
