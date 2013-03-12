@@ -54,8 +54,8 @@ module ServerRegistrationHeartbeatStateMachine
   # TODO: Make the registration timeout configurable
   def self.registration_message_deserializer(connection)
     machine = PartialReaderDSL::PartialReaderMachine.protocol do |m|
-      m.consume(4) >> {|buff| buff.unpack("*i")[0]}
-      m.consume >> {|buff| MessagePack.unpack(buff)}
+      m.consume(4) >> proc {|buff| buff.unpack("*i")[0]}
+      m.consume >> proc {|buff| MessagePack.unpack(buff)}
     end
     Timeout::timeout(5, RegistrationTimeout) do
       begin
