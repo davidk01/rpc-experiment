@@ -5,6 +5,7 @@ class Instruction; end
 class Consumer < Instruction
   
   def initialize(count)
+    raise ArgumentError if count.nil?
     @count = count
   end
   
