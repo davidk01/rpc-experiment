@@ -46,7 +46,10 @@ class PartialReaderMachine
   
   def self.protocol(&blk)
     current_instance = new
-    current_instance.instance_eval { blk.call }
+    current_instance.singleton_class.class_eval do
+      define_method(:instantiator, &blk)
+    end
+    current_instance.instantiator
     current_instance
   end
   
