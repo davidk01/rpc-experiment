@@ -2,9 +2,8 @@ class HeartbeatCallback
   
   def initialize(beat, wipe)
     @wipe = wipe
-    @machine = PartialReaderDSL::PartialReaderMachine.protocol do |m|
-      m.consume(2)
-      m.buffer_transform do |ctx|
+    @machine = PartialReaderDSL::PartialReaderMachine.protocol do
+      consume(2); buffer_transform do |ctx|
         if ctx.buffer == "OK"
           $logger.debug "Heartbeat OK. Resetting machine."
           beat.call; ctx.jump(-1)

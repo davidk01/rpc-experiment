@@ -46,7 +46,7 @@ class PartialReaderMachine
   
   def self.protocol(&blk)
     current_instance = new
-    blk.call(current_instance)
+    current_instance.instance_eval { blk.call }
     current_instance
   end
   
