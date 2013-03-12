@@ -65,6 +65,7 @@ module ServerRegistrationHeartbeatStateMachine
       begin
         res = machine.call(connection)
       end while res == :not_done
+      $logger.debug "Registered agent: #{res[0]["agent_dispatch_port"]}."
       res[0]
     end
   end
