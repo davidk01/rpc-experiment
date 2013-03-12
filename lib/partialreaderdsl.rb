@@ -5,13 +5,12 @@ class Instruction; end
 class Consumer < Instruction
   
   def initialize(count)
-    raise ArgumentError if count.nil?
     @count = count
   end
   
   def call(context, connection)
     return_value = :call_again
-    if (delta = @count - context.buffer.length) > 0
+    if (delta = (@count ||= context.return_stack.pop) - context.buffer.length) > 0
       context.buffer << connection.readpartial(delta)
       if context.buffer.length == @count
         return_value = :done
@@ -50,7 +49,7 @@ class PartialReaderMachine
     end
     
     def consume(count = nil)
-      count ? @machine.consume(count) : @machine.consume
+      @machine.consume(count)
     end
     
     def buffer_transform(&blk)
@@ -97,7 +96,7 @@ class PartialReaderMachine
     :not_done
   end
   
-  def consume(count = @return_stack.pop)
+  def consume(count = nil)
     @instruction_sequence << Consumer.new(count)
   end
   
