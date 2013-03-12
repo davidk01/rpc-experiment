@@ -8,12 +8,21 @@ class Consumer < Instruction
     @count = count
   end
   
+  def >>(&blk)
+    @blk = blk
+  end
+  
+  def call_block(context)
+    res = @blk.call(context.buffer); context.empty_buffer!; context.return res
+  end
+  
   def call(context, connection)
     return_value = :call_again
     if (delta = (@count ||= context.return_stack.pop) - context.buffer.length) > 0
       context.buffer << connection.readpartial(delta)
       if context.buffer.length == @count
         return_value = :done
+        call_block(context) if @blk
       end
     end
     return_value
@@ -26,7 +35,7 @@ class BufferTransform < Instruction
   def initialize(&blk)
     @blk = blk
   end
-  
+
   def call(context, connection)
     @blk.call(context); context.empty_buffer!; :delay_call
   end
@@ -71,7 +80,7 @@ class PartialReaderMachine
   end
   
   def consume(count = nil)
-    @instruction_sequence << Consumer.new(count)
+    consumer = Consumer.new(count); @instruction_sequence << consumer; consumer
   end
   
   def return(value)

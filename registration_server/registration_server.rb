@@ -54,19 +54,14 @@ module ServerRegistrationHeartbeatStateMachine
   # TODO: Make the registration timeout configurable
   def self.registration_message_deserializer(connection)
     machine = PartialReaderDSL::PartialReaderMachine.protocol do |m|
-      m.consume(4); m.buffer_transform {|ctx|
-        ctx.return ctx.buffer.unpack("*i")[0]
-      }
-      m.consume; m.buffer_transform {|ctx|
-        ctx.return MessagePack.unpack(ctx.buffer)
-      }
+      m.consume(4) >> {|buff| buff.unpack("*i")[0]}
+      m.consume >> {|buff| MessagePack.unpack(buff)}
     end
     Timeout::timeout(5, RegistrationTimeout) do
       begin
         res = machine.call(connection)
       end while res == :not_done
-      $logger.debug "Registered agent: #{res[0]["agent_dispatch_port"]}."
-      res[0]
+      return res[0]
     end
   end
   
