@@ -2,14 +2,16 @@ class HeartbeatCallback
   
   def initialize(beat, wipe)
     @wipe = wipe
-    @machine = PartialReaderDSL::PartialReaderMachine.protocol do
-      consume(2); buffer_transform do |ctx|
-        if ctx.buffer == "OK"
-          $logger.debug "Heartbeat OK. Updating timestamp and resetting machine."
-          beat.call; ctx.jump(-1)
-        else
-          $logger.error "Did not recognize heartbeat message: #{ctx.buffer}."
-          wipe.call
+    @machine = PartialReaderDSL::FiberReaderMachine.protocol do
+      loop do
+        consume(2); buffer_transform do |ctx|
+          if ctx.buffer == "OK"
+            $logger.debug "Heartbeat OK. Updating timestamp and resetting machine."
+            beat.call
+          else
+            $logger.error "Did not recognize heartbeat message: #{ctx.buffer}."
+            wipe.call
+          end
         end
       end
     end

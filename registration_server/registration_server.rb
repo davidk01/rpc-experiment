@@ -1,7 +1,7 @@
-['pp', 'msgpack', 'socket', 'thread', 'resolv', 'resolv-replace', 'nio', 'celluloid', 
+['msgpack', 'socket', 'thread', 'resolv', 'resolv-replace', 'nio', 'celluloid', 
  'logger', 'timeout'].each {|e| require e}
 ['./registrar', './nioactor', './heartbeatcallback', 
- '../lib/partialreaderdsl', '../lib/fiberdsl'].each {|e| require_relative e}
+ '../lib/fiberdsl'].each {|e| require_relative e}
 $logger = Logger.new(STDOUT, 'daily')
 # die as soon as possible
 Thread.abort_on_exception = true
@@ -66,7 +66,7 @@ module ServerRegistrationHeartbeatStateMachine
       end
     end
     Timeout::timeout(5, RegistrationTimeout) do
-      (res = machine.call(connection); pp res) while res.nil?
+      res = machine.call(connection) while res.nil?
       return res[0]
     end
   end

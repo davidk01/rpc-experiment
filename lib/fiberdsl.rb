@@ -9,7 +9,7 @@ module PartialReaderDSL
       current_instance
     end
 
-    attr_reader :connection, :return_stack
+    attr_reader :connection, :return_stack, :buffer
 
     def initialize
       @buffer, @return_stack = "", []
@@ -18,17 +18,17 @@ module PartialReaderDSL
 
     def consume(count = nil, &blk)
       @count = count || @return_stack.pop
-      if (delta = @count - @buffer.length) > 0
+      while (delta = @count - @buffer.length) > 0
         begin
           @buffer << @connection.read_nonblock(delta)
         rescue Errno::EAGAIN
           Fiber.yield
+        rescue Exception => e
+          $logger.error e; raise
         end
-        if @buffer.length == @count
-          (@return_stack << blk.call(@buffer); empty_buffer!) if blk
-        end
-        nil
       end
+      (@return_stack << blk.call(@buffer); empty_buffer!) if blk
+      nil
     end
 
     def empty_buffer!
