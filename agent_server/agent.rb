@@ -1,5 +1,5 @@
 ['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 'logger'].each {|e| require e}
-['./dispatcher'].each {|e| require_relative e}
+['./dispatcher', './action_payload', '../lib/plugins'].each {|e| require_relative e}
 $logger = Logger.new(STDOUT, 'daily')
 # die as soon as possible
 Thread.abort_on_exception = true
@@ -60,9 +60,10 @@ module ClientRegistrationHeartbeatStateMachine
         # TODO: Unpacking can fail so figure out how to handle that
         # TODO: Make sure dispatcher does validation
         payload = MessagePack.unpack(conn.gets.strip)
-        results = dispatcher.dispatch(payload)
+        results = dispatcher.dispatch(ActionPayload.new(payload)).to_msgpack
         # TODO: This can fail so make it more robust, e.g. broken pipe, connection reset, etc.
-        conn.puts results.to_msgpack; conn.flush; conn.close
+        conn.write [results.length].pack("*i") + results
+        conn.flush; conn.close
       end
     end
   end
