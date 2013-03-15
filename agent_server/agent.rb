@@ -1,5 +1,4 @@
-['msgpack', 'resolv', 'resolv-replace', 'socket',
- 'celluloid', 'logger'].each {|e| require e}
+['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 'logger'].each {|e| require e}
 ['./dispatcher'].each {|e| require_relative e}
 $logger = Logger.new(STDOUT, 'daily')
 # die as soon as possible
@@ -30,7 +29,7 @@ module ClientRegistrationHeartbeatStateMachine
   
   # TODO: Make heartbeat frequency configurable
   def self.establish_heartbeat
-    @heartbeat_thread = Thread.new do
+    Thread.new do
       loop do
         $logger.debug "Heartbeat."
         begin

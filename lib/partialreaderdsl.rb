@@ -1,15 +1,16 @@
 module PartialReaderDSL
 
-class Instruction; end
+class Instruction
+  # advise the partial reader machine how to proceed based on the status
+  # of the connection
+  def return_value(connection)
+  end
+end
 
 class Consumer < Instruction
   
-  def initialize(count)
-    @count = count
-  end
-  
-  def >>(blk)
-    @blk = blk
+  def initialize(count, &blk)
+    @count, @blk = count, blk
   end
   
   def call_block(context)
@@ -17,15 +18,18 @@ class Consumer < Instruction
   end
   
   def call(context, connection)
-    return_value = :call_again
     if (delta = (@count ||= context.return_stack.pop) - context.buffer.length) > 0
-      context.buffer << connection.readpartial(delta)
+      begin
+        context.buffer << connection.read_nonblock(delta)
+      rescue Errno::EAGAIN
+        return :call_again
+      end
       if context.buffer.length == @count
-        return_value = :done
         call_block(context) if @blk
+        return :done
       end
     end
-    return_value
+    return :call_again
   end
   
 end
@@ -45,8 +49,7 @@ end
 class PartialReaderMachine
   
   def self.protocol(&blk)
-    current_instance = new
-    current_instance.singleton_class.class_eval { define_method(:instantiator, &blk) }
+    (current_instance = new).singleton_class.class_eval { define_method(:instantiator, &blk) }
     current_instance.instantiator; current_instance
   end
   
@@ -69,18 +72,18 @@ class PartialReaderMachine
     case (status = current_instr.call(self, connection))
     when :done
       @instruction_pointer += 1
-      call(connection)
+      call(connection) # this can potentially block select loop
     when :delay_call
       @instruction_pointer += 1
     when :call_again
     else
       throw :unknown_return_code, status
     end
-    :not_done
+    return :not_done
   end
   
-  def consume(count = nil)
-    consumer = Consumer.new(count); @instruction_sequence << consumer; consumer
+  def consume(count = nil, &blk)
+    consumer = Consumer.new(count, &blk); @instruction_sequence << consumer; consumer
   end
   
   def return(value)
