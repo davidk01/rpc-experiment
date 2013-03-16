@@ -14,13 +14,13 @@ class Dispatcher
   
   def validate(payload)
     $logger.debug "Validating payload."
-    unless Plugins.plugin_exists?(plugin = payload.plugin)
+    unless Plugins.plugin_exists?(payload.plugin)
       raise PluginExistenceError, "#{plugin} does not exist"
     end
-    unless Plugins.action_supported?(plugin, action = payload.action)
-      raise ActionSupportedError, "#{plugin} does not support #{action}."
+    unless (p = Plugins[payload.plugin]).action_exists?(payload.action)
+      raise ActionSupportedError, "#{payload.plugin} does not support #{payload.action}."
     end
-    Plugins.validate_arguments(plugin, action, args = payload.arguments)
+    p.plugin.actions[payload.action].validate_args(payload.arguments)
   end
 
   def dispatch(payload)
@@ -29,4 +29,5 @@ class Dispatcher
     $logger.debug "Dispatching #{action} on #{plugin} with #{arguments}."
     Plugins[plugin].plugin.new.send(action, arguments)
   end
+
 end

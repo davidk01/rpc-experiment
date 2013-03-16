@@ -1,8 +1,8 @@
-['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 'logger'].each {|e| require e}
-['./dispatcher', './action_payload', '../lib/plugins'].each {|e| require_relative e}
-$logger = Logger.new(STDOUT, 'daily')
-# die as soon as possible
-Thread.abort_on_exception = true
+['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
+ 'logger'].each { |e| require e }
+['./dispatcher', './action_payload', '../lib/plugincomponents', 
+ '../lib/plugins'].each { |e| require_relative e }
+$logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
 
 module ClientRegistrationHeartbeatStateMachine
   
