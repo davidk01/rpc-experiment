@@ -14,10 +14,10 @@ class Dispatcher
   
   def validate(payload)
     $logger.debug "Validating payload."
-    unless Plugins.plugin_exists?(payload.plugin)
-      raise PluginExistenceError, "#{plugin} does not exist"
+    unless (p = Plugins[payload.plugin])
+      raise PluginExistenceError, "#{payload.plugin} does not exist"
     end
-    unless (p = Plugins[payload.plugin]).action_exists?(payload.action)
+    unless p.action_exists?(payload.action)
       raise ActionSupportedError, "#{payload.plugin} does not support #{payload.action}."
     end
     p.plugin.actions[payload.action].validate_args(payload.arguments)

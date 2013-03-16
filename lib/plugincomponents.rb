@@ -11,7 +11,7 @@ module PluginComponents
     end
 
     def action_exists?(action)
-      !@plugin.actions[action].nil
+      !@plugin.actions[action].nil?
     end
 
   end
