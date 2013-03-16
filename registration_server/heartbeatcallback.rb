@@ -10,7 +10,7 @@ class HeartbeatCallback
             beat.call
           else
             $logger.error "Did not recognize heartbeat message: #{ctx.buffer}."
-            wipe.call
+            wipe.call; break
           end
         end
       end
