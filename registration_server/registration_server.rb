@@ -1,10 +1,14 @@
 ['msgpack', 'socket', 'thread', 'resolv', 'resolv-replace', 'nio', 'celluloid', 
- 'logger', 'timeout'].each {|e| require e}
+ 'logger', 'timeout'].each { |e| require e }
 ['./registrar', './nioactor', './heartbeatcallback', 
- '../lib/fiberdsl'].each {|e| require_relative e}
-$logger = Logger.new(STDOUT, 'daily')
-# die as soon as possible
-Thread.abort_on_exception = true
+ '../lib/fiberdsl'].each { |e| require_relative e }
+$logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
+$config = {
+  :registration_port => 3000,
+  :registration_timeout => 5, # seconds
+  :connection_killer_interval => 120, # seconds
+  :agent_staleness => 5 # minutes
+}
 
 module ServerRegistrationHeartbeatStateMachine
   
@@ -24,7 +28,7 @@ module ServerRegistrationHeartbeatStateMachine
     Thread.new do
       $logger.debug "Listening for registration requests."
       # TODO: Make the registration port configurable
-      Socket.tcp_server_loop(3000) do |conn|
+      Socket.tcp_server_loop($config[:registration_port]) do |conn|
         Thread.new { registration_handler(conn) }
       end
     end
@@ -65,7 +69,7 @@ module ServerRegistrationHeartbeatStateMachine
         payload
       end
     end
-    Timeout::timeout(5, RegistrationTimeout) do
+    Timeout::timeout($config[:registration_timeout], RegistrationTimeout) do
       res = machine.call(connection) while res.nil?
       return res[0]
     end
@@ -81,20 +85,16 @@ module ServerRegistrationHeartbeatStateMachine
     buffer
   end
   
-  # TODO: Registration should follow some well defined protocol
-  def self.validate_payload(args)
-    #code
-  end
-  
   # anything older than 5 minutes dies
   # TODO: Make the culling time configurable
   # TODO: Make the culling frequency configurable
   def self.culling_loop
     $logger.debug "Starting connection killer."
-    culler = proc {|registrant| Time.now.to_i - registrant.latest_timestamp > 5 * 60}
+    staleness_interval = $config[:agent_staleness] * 60
+    culler = proc {|registrant| Time.now.to_i - registrant.latest_timestamp > staleness_interval}
     Thread.new do
       loop do
-        sleep 120; $logger.debug "Culling registrants."
+        sleep $config[:connection_killer_interval]; $logger.debug "Culling registrants."
         @heartbeat_selector.filter(&culler)
       end
     end
