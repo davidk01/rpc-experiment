@@ -1,8 +1,13 @@
 ['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
  'logger'].each { |e| require e }
-['./dispatcher', './action_payload', '../lib/plugincomponents', 
- '../lib/plugins'].each { |e| require_relative e }
+['./dispatcher', './action_payload', '../lib/plugin_components', 
+ '../lib/plugins', './agent_config'].each { |e| require_relative e }
 $logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
+$agent_config = {
+  :registration_server => 'localhost', :registration_server_port => 3000,
+  :agent_dispatch_port => 3001, :registration_wait_period => 5,
+  :heartbeat_interval => 5
+}
 
 module ClientRegistrationHeartbeatStateMachine
   
@@ -15,14 +20,15 @@ module ClientRegistrationHeartbeatStateMachine
   # TODO: Make the retry frequency configurable
   def self.register
     begin
-      @conn = Socket.tcp('localhost', 3000)
+      @conn = Socket.tcp($agent_config[:registration_server], 
+        $agent_config[:registration_server_port])
       $logger.debug "Registering."
       payload = {
-        "agent_dispatch_port" => 3001
+        "agent_dispatch_port" => $agent_config[:agent_dispatch_port]
       }.to_msgpack
       @conn.write [payload.length].pack("*i") + payload
     rescue Errno::ECONNREFUSED, Errno::EPIPE
-      wait_period = 5
+      wait_period = $agent_config[:registration_wait_period]
       $logger.error "Registration connection refused or broken. Retrying in #{wait_period} seconds."
       sleep wait_period; retry
     end
@@ -35,7 +41,7 @@ module ClientRegistrationHeartbeatStateMachine
         $logger.debug "Heartbeat."
         begin
           @conn.write "OK"; @conn.flush
-          sleep 5
+          sleep $agent_config[:heartbeat_interval]
         rescue Errno::EPIPE
           $logger.error "Looks like the registry died."; break
         rescue Errno::ECONNRESET
@@ -59,7 +65,7 @@ module ClientRegistrationHeartbeatStateMachine
     Thread.new do
       $logger.info "Accepting rpc requests."
       dispatcher = Dispatcher.new
-      Socket.tcp_server_loop(3001) do |conn|
+      Socket.tcp_server_loop($agent_config[:agent_dispatch_port]) do |conn|
         $logger.debug "Action dispatch connection accepted."
         # TODO: Unpacking can fail so figure out how to handle that
         # TODO: Make sure dispatcher does validation
