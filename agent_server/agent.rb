@@ -7,7 +7,8 @@ Thread.abort_on_exception = true
 module ClientRegistrationHeartbeatStateMachine
   
   def self.start
-    register; establish_heartbeat; accept_rpc_requests
+    Thread.new { register; establish_heartbeat }
+    accept_rpc_requests
   end
   
   # TODO: Make the agent dispatch port configurable
@@ -53,16 +54,24 @@ module ClientRegistrationHeartbeatStateMachine
   # TODO: Make rpc port configurable and the same
   # as what is sent out during the registration attempt.
   def self.accept_rpc_requests
+    exceptions = [ArgumentError, MessagePack::MalformedFormatError,
+      Dispatcher::PluginExistenceError, Dispatcher::ActionSupportedError]
     Thread.new do
       $logger.info "Accepting rpc requests."
-      dispatcher = ::Dispatcher.new('asdf')
+      dispatcher = Dispatcher.new
       Socket.tcp_server_loop(3001) do |conn|
+        $logger.debug "Action dispatch connection accepted."
         # TODO: Unpacking can fail so figure out how to handle that
         # TODO: Make sure dispatcher does validation
-        results = dispatcher.dispatch(ActionPayload.new(conn.gets.strip)).to_msgpack
-        # TODO: This can fail so make it more robust, e.g. broken pipe, connection reset, etc.
-        conn.write [results.length].pack("*i") + results
-        conn.flush; conn.close
+        begin
+          results = dispatcher.dispatch(ActionPayload.new(conn.gets.strip)).to_msgpack
+          # TODO: This can fail so make it more robust, e.g. broken pipe, connection reset, etc.
+          conn.write [results.length].pack("*i") + results
+        rescue *exceptions => e
+          $logger.error e
+        ensure
+          conn.flush; conn.close
+        end
       end
     end
   end

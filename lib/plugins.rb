@@ -2,13 +2,11 @@
 # possible and all the various classes for the self-documenting
 # pieces should go here.
 module PluginComponents
-
-  class ActionArgumentRequiredError < StandardError; end
   
   class Plugin
-    attr_reader :class, :description
+    attr_reader :plugin, :description
     def initialize(klass, description)
-      @class, @description = klass, description
+      @plugin, @description = klass, description
     end
   end
   
@@ -21,11 +19,11 @@ module PluginComponents
       @name, @description, @arguments = opts[:name], opts[:desc], opts[:args]
     end
     
-    # basic argument validation for now
+    # basic argument validation that happens during dispatch time
     def validate_args(opts = {})
       @arguments.each do |e|
         if opts[e].nil?
-          raise ActionArgumentRequiredError, "#{e} is a required argument for #{@name}."
+          raise ArgumentError, "#{e} is a required argument for #{@name}."
         end
       end
     end
@@ -37,7 +35,6 @@ end
 # to handle plugin registration and plugin action definition.
 module Plugins
 
-  class NoPluginError < StandardError; end
   class PluginDefinedTwiceError < StandardError; end
   
   @plugins = {}
@@ -46,11 +43,20 @@ module Plugins
     @plugins.keys.clone
   end
   
+  def self.plugin_exists?(plugin)
+    !@plugins[plugin].nil?
+  end
+
+  def self.action_supported?(plugin, action)
+    !(plugin_data = @plugins[plugin]).nil? && plugin_data.plugin.action_exists?(action)
+  end
+
+  def self.validate_arguments(plugin, action, args)
+    @plugins[plugin].plugin.actions[action].validate_args(args)
+  end
+
   def self.[](plugin)
-    if !(plugin_data = @plugins[plugin])
-      raise NoPluginError, "%s does not exist." % [plugin]
-    end
-    plugin_data
+    @plugins[plugin]
   end
   
   def self.included(base)
@@ -63,10 +69,14 @@ module Plugins
   
   module PluginClassMethods
     def def_action(opts = {}, &blk)
-      @actions[name] = PluginComponents::ActionMetadata.new(opts)
-      self.instance_eval { define_method(name, &blk) }
+      @actions[method_name = opts[:name]] = PluginComponents::ActionMetadata.new(opts)
+      self.instance_eval { define_method(method_name, &blk) }
     end
     
+    def action_exists?(action)
+      !@actions[action].nil?
+    end
+
     def actions
       @actions
     end
