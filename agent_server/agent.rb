@@ -59,8 +59,7 @@ module ClientRegistrationHeartbeatStateMachine
       Socket.tcp_server_loop(3001) do |conn|
         # TODO: Unpacking can fail so figure out how to handle that
         # TODO: Make sure dispatcher does validation
-        payload = MessagePack.unpack(conn.gets.strip)
-        results = dispatcher.dispatch(ActionPayload.new(payload)).to_msgpack
+        results = dispatcher.dispatch(ActionPayload.new(conn.gets.strip)).to_msgpack
         # TODO: This can fail so make it more robust, e.g. broken pipe, connection reset, etc.
         conn.write [results.length].pack("*i") + results
         conn.flush; conn.close
