@@ -6,13 +6,9 @@ module PluginComponents
   class Plugin
     attr_reader :plugin, :description
 
-    def initialize(klass, description)
-      @plugin, @description = klass, description
-    end
+    def initialize(klass, description); @plugin, @description = klass, description; end
 
-    def action_exists?(action)
-      !@plugin.actions[action].nil?
-    end
+    def action_exists?(action); !@plugin.actions[action].nil?; end
 
   end
 

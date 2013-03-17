@@ -1,7 +1,7 @@
 ['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
  'logger'].each { |e| require e }
 ['./dispatcher', './action_payload', '../lib/plugin_components', 
- '../lib/plugins', './agent_config'].each { |e| require_relative e }
+ '../lib/plugins'].each { |e| require_relative e }
 $logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
 $agent_config = {
   :registration_server => 'localhost', :registration_server_port => 3000,
