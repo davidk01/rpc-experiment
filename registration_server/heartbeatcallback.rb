@@ -2,18 +2,15 @@ class HeartbeatCallback
   
   def initialize(beat, wipe)
     @wipe = wipe; @machine = PartialReaderDSL::FiberReaderMachine.protocol do
-      catch(:unrecognized_message) do
-        loop do
-          consume(2); buffer_transform do |ctx|
-            if ctx.buffer == "OK"
-              beat.call
-            else
-              $logger.error "Did not recognize heartbeat message: #{ctx.buffer}."
-              wipe.call; throw :unrecognized_message
-            end
-          end
+      message_checker = lambda do |ctx|
+        if ctx.buffer == "OK"
+          beat.call
+        else
+          $logger.error "Did not recognize hearbeat message: #{ctx.buffer}."
+          wipe.call; throw :unrecognized_message
         end
       end
+      catch(:unrecognized_message) { loop { consume(2); buffer_transform(&message_checker) } }
     end
   end
   
