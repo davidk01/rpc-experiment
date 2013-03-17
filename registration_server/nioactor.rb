@@ -15,7 +15,7 @@ class NIOActor
   end
   
   def tick
-    @selector_loop.select(1) {|m| m.value.call(m)}
+    @selector_loop.select(1) { |m| $logger.debug "Calling back #{m}."; m.value.call(m) }
   end
   
   def wipe(fqdn)

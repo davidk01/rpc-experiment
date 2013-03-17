@@ -1,16 +1,16 @@
 class HeartbeatCallback
   
   def initialize(beat, wipe)
-    @wipe = wipe
-    @machine = PartialReaderDSL::FiberReaderMachine.protocol do
-      loop do
-        consume(2); buffer_transform do |ctx|
-          if ctx.buffer == "OK"
-            $logger.debug "Heartbeat OK. Updating timestamp and resetting machine."
-            beat.call
-          else
-            $logger.error "Did not recognize heartbeat message: #{ctx.buffer}."
-            wipe.call; break
+    @wipe = wipe; @machine = PartialReaderDSL::FiberReaderMachine.protocol do
+      catch(:unrecognized_message) do
+        loop do
+          consume(2); buffer_transform do |ctx|
+            if ctx.buffer == "OK"
+              beat.call
+            else
+              $logger.error "Did not recognize heartbeat message: #{ctx.buffer}."
+              wipe.call; throw :unrecognized_message
+            end
           end
         end
       end
@@ -18,12 +18,10 @@ class HeartbeatCallback
   end
   
   def call(monitor)
-    $logger.debug "Reading heartbeat data."
     begin
       @machine.call(monitor.io)
     rescue EOFError
-      $logger.error "EOFError from #{monitor.io.remote_address}."
-      @wipe.call
+      @wipe.call; $logger.error "EOFError from #{monitor.io.remote_address}."
     end
   end
   
