@@ -3,6 +3,7 @@
 ['./dispatcher', './action_payload', '../lib/plugin_components', 
  '../lib/plugins'].each { |e| require_relative e }
 $logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
+
 $agent_config = {
   :registration_server => 'localhost', :registration_server_port => 3000,
   :agent_dispatch_port => 3001, :registration_wait_period => 5,
@@ -72,6 +73,12 @@ module ClientRegistrationHeartbeatStateMachine
         begin
           results = dispatcher.dispatch(ActionPayload.new(conn.gets.strip)).to_msgpack
           # TODO: This can fail so make it more robust, e.g. broken pipe, connection reset, etc.
+          # TODO: Define the interface between plugins and dispatchers, in other words
+          # the plugins don't need to know anything about the serialization format, all
+          # the metadata and other stuff should be handled by the dispatcher with some
+          # extra help from some other objects.
+          # TODO: Clean up the exception handling mechanism, dispatcher errors should be handled
+          # internally and should not propagate up to the connection layer.
           conn.write [results.length].pack("*i") + results
         rescue *exceptions => e
           $logger.error e
