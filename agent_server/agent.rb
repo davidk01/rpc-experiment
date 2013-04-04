@@ -1,7 +1,9 @@
 ['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
  'logger'].each { |e| require e }
+
 ['./dispatcher', './action_payload', '../lib/plugin_components', 
  '../lib/plugins'].each { |e| require_relative e }
+
 $logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
 
 $agent_config = {
@@ -10,24 +12,52 @@ $agent_config = {
   :heartbeat_interval => 5
 }
 
+# action requests are also likely to evolve over time so encapsulate
+class ActionPayload
+
+  attr_reader :plugin, :action, :arguments
+
+  def initialize(payload)
+    payload_hash = MessagePack.unpack(payload)
+    ["plugin", "action", "arguments"].each do |e|
+      if (val = payload_hash[e]).nil?
+        raise ArgumentError, "#{e} is a required argument."
+      else
+        instance_variable_set("@#{e}", val)
+      end
+    end
+  end
+
+end
+
+# registration is likely to evolve over time so encapsulate
+class RegistrationPayload
+
+  def initialize(opts = {})
+    [:dispatch_port].each do |e| 
+      raise ArgumentError, "#{e} is a required argument." if opts[e].nil?
+    end
+    @dispatch_port = opts[:dispatch_port]
+  end
+
+  def serialize
+    payload = {"agent_dispatch_port" => @dispatch_port}.to_msgpack
+    [payload.length].pack("*i") + payload
+  end
+
+end
+
 module ClientRegistrationHeartbeatStateMachine
   
   def self.start
-    Thread.new { register; establish_heartbeat }
-    accept_rpc_requests
+    Thread.new { register; establish_heartbeat }; accept_rpc_requests
   end
   
-  # TODO: Make the agent dispatch port configurable
-  # TODO: Make the retry frequency configurable
   def self.register
     begin
-      @conn = Socket.tcp($agent_config[:registration_server], 
-        $agent_config[:registration_server_port])
-      $logger.debug "Registering."
-      payload = {
-        "agent_dispatch_port" => $agent_config[:agent_dispatch_port]
-      }.to_msgpack
-      @conn.write [payload.length].pack("*i") + payload
+      @conn = Socket.tcp($agent_config[:registration_server], $agent_config[:registration_server_port])
+      payload = RegistrationPayload.new(:dispatch_port => $agent_config[:agent_dispatch_port])
+      @conn.write payload.serialize
     rescue Errno::ECONNREFUSED, Errno::EPIPE
       wait_period = $agent_config[:registration_wait_period]
       $logger.error "Registration connection refused or broken. Retrying in #{wait_period} seconds."
@@ -35,7 +65,6 @@ module ClientRegistrationHeartbeatStateMachine
     end
   end
   
-  # TODO: Make heartbeat frequency configurable
   def self.establish_heartbeat
     Thread.new do
       loop do
@@ -58,28 +87,18 @@ module ClientRegistrationHeartbeatStateMachine
     register; establish_heartbeat
   end
   
-  # TODO: Make rpc port configurable and the same
   # as what is sent out during the registration attempt.
   def self.accept_rpc_requests
-    exceptions = [ArgumentError, MessagePack::MalformedFormatError,
-      Dispatcher::PluginExistenceError, Dispatcher::ActionSupportedError]
+    exceptions = [ArgumentError, MessagePack::MalformedFormatError]
     Thread.new do
       $logger.info "Accepting rpc requests."
       dispatcher = Dispatcher.new
       Socket.tcp_server_loop($agent_config[:agent_dispatch_port]) do |conn|
         $logger.debug "Action dispatch connection accepted."
-        # TODO: Unpacking can fail so figure out how to handle that
-        # TODO: Make sure dispatcher does validation
         begin
-          results = dispatcher.dispatch(ActionPayload.new(conn.gets.strip)).to_msgpack
-          # TODO: This can fail so make it more robust, e.g. broken pipe, connection reset, etc.
-          # TODO: Define the interface between plugins and dispatchers, in other words
-          # the plugins don't need to know anything about the serialization format, all
-          # the metadata and other stuff should be handled by the dispatcher with some
-          # extra help from some other objects.
-          # TODO: Clean up the exception handling mechanism, dispatcher errors should be handled
-          # internally and should not propagate up to the connection layer.
-          conn.write [results.length].pack("*i") + results
+          # this is the only line that can throw an exception
+          result = dispatcher.dispatch ActionPayload.new(conn.gets.strip)
+          conn.write result.serialize
         rescue *exceptions => e
           $logger.error e
         ensure
