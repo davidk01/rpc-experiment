@@ -10,6 +10,10 @@ module PluginComponents
 
     def action_exists?(action); !@plugin.actions[action].nil?; end
 
+    def act(action, arguments)
+      @plugin.actions[action].validate_args(arguments); @plugin.new.send(action, arguments)
+    end
+
   end
 
   # stores various bits about the action, e.g. name, arguments

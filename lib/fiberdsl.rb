@@ -25,12 +25,12 @@ module PartialReaderDSL
           $logger.error e; raise
         end
       end
-      (@return_stack << blk.call(@buffer); empty_buffer!) if blk; nil
+      (@return_stack << blk.call(@buffer); empty_buffer!) if blk
     end
 
     def empty_buffer!; @buffer.replace ''; end
 
-    def buffer_transform(&blk); blk.call(self); empty_buffer!; nil; end
+    def buffer_transform(&blk); blk.call(self); empty_buffer!; end
 
     def call(conn); $logger.debug "Resuming fiber."; @fiber.resume(conn); end
 
