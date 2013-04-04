@@ -1,3 +1,5 @@
+require 'fiber'
+
 module PartialReaderDSL
 
   class FiberReaderMachine
@@ -11,7 +13,7 @@ module PartialReaderDSL
 
     def initialize
       @buffer, @return_stack = "", []
-      @fiber = Fiber.new { |c| @connection = c; resumer; @return_stack }
+      @fiber = Fiber.new { |c| @connection = c; resumer }
     end
 
     def consume(count = nil, &blk)
@@ -30,9 +32,16 @@ module PartialReaderDSL
 
     def empty_buffer!; @buffer.replace ''; end
 
-    def buffer_transform(&blk); blk.call(self); empty_buffer!; end
+    def buffer_transform(&blk); blk.call(self); empty_buffer! end
 
-    def call(conn); $logger.debug "Resuming fiber."; @fiber.resume(conn); end
+    def call(conn)
+      if @fiber.alive?
+        $logger.debug "Fiber still alive so resuming."
+        @fiber.resume(conn); nil
+      else
+        @return_stack
+      end
+    end
 
   end
 
