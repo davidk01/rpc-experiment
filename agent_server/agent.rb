@@ -89,7 +89,6 @@ module ClientRegistrationHeartbeatStateMachine
   
   # as what is sent out during the registration attempt.
   def self.accept_rpc_requests
-    exceptions = [ArgumentError, MessagePack::MalformedFormatError]
     Thread.new do
       $logger.info "Accepting rpc requests."
       dispatcher = Dispatcher.new
@@ -99,7 +98,7 @@ module ClientRegistrationHeartbeatStateMachine
           # this is the only line that can throw an exception
           result = dispatcher.dispatch ActionPayload.new(conn.gets.strip)
           conn.write result.serialize
-        rescue *exceptions => e
+        rescue MessagePack::MalformedFormatError => e
           $logger.error e
         ensure
           conn.flush; conn.close

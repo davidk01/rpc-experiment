@@ -43,18 +43,15 @@ class Dispatcher
 
   def dispatch(payload)
     $logger.debug "Validating plugin and action existence."
-    unless (plugin_metadata = Plugins[payload.plugin])
+    unless (plugin = Plugins[payload.plugin])
       return ErrorResponse.new(:error_message => "#{payload.plugin} does not exist.")
     end
-    unless (plugin_metadata.action_exists?(action = payload.action))
-      return ErrorResponse.new(:error_message => "#{payload.plugin} does not support #{payload.action}.")
+    unless (plugin.action_exists?(action = payload.action))
+      return ErrorResponse.new(:error_message => "#{payload.plugin} does not support #{action}.")
     end
     begin
-      $logger.debug "Validating arguments."
-      plugin_metadata.plugin.actions[action].validate_args(arguments = payload.arguments)
       $logger.debug "Getting response: plugin = #{payload.plugin}, action = #{action}."
-      plugin_response = plugin_metadata.plugin.new.send(action, arguments)
-      ResponsePayload.new(:plugin_response => plugin_response)
+      ResponsePayload.new(:plugin_response => plugin.act(action, plugin.arguments))
     rescue Exception => e
       ErrorResponse.new(:error_message => e.message)
     end
