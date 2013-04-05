@@ -1,7 +1,7 @@
 ['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
  'logger'].each { |e| require e }
 
-['./dispatcher', './action_payload', '../lib/plugin_components', 
+['./dispatcher', '../lib/plugin_components', 
  '../lib/plugins'].each { |e| require_relative e }
 
 $logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
