@@ -15,7 +15,7 @@ module Plugins
       raise PluginDefinedTwiceError, "#{base.descriptive_name} is already defined."
     end
     @plugins[base.descriptive_name] = PluginComponents::Plugin.new(base, base.description)
-    base.instance_eval { attr_reader :actions; @actions = {}; extend PluginClassMethods }
+    base.instance_eval { @actions = {}; extend PluginClassMethods }
   end
   
   module PluginClassMethods
@@ -25,6 +25,7 @@ module Plugins
       self.instance_eval { define_method(method_name, &blk) }
     end
 
+    def actions; @actions; end
   end
   
 end

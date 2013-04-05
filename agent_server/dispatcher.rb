@@ -51,7 +51,7 @@ class Dispatcher
     end
     begin
       $logger.debug "Getting response: plugin = #{payload.plugin}, action = #{action}."
-      ResponsePayload.new(:plugin_response => plugin.act(action, plugin.arguments))
+      ResponsePayload.new(:plugin_response => plugin.act(action, payload.arguments))
     rescue Exception => e
       ErrorResponse.new(:error_message => e.message)
     end

@@ -1,5 +1,6 @@
 class Discovery
-  
+  require 'yaml'
+
   # describe the plugin
   def self.descriptive_name
     "host.discovery"
@@ -20,8 +21,17 @@ class Discovery
 
   # define some actions
   def_action :name => "ping", :desc => "The agent responds with pong.", 
-   :args => {} do |opts = {}| 
+   :args => [] do |opts = {}| 
     "pong"
+  end
+
+  def_action :name => "fact_filter", :desc => [
+    "The agent looks in its local fact store",
+    "and responds with either yes or no based",
+    "whether the fact matches or not."
+  ].join(" "), :args => ["fact", "value"] do |opts = {}|
+    facts = YAML.load_file('/etc/host_facts.yaml')
+    facts[opts[:fact]] == opts[:value]
   end
 
 end
