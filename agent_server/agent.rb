@@ -8,7 +8,7 @@ $logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
 
 $agent_config = {
   :registration_server => 'localhost', :registration_server_port => 3000,
-  :agent_dispatch_port => 3001, :registration_wait_period => 5,
+  :agent_dispatch_port => 3002, :registration_wait_period => 5,
   :heartbeat_interval => 5
 }
 

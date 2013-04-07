@@ -3,7 +3,7 @@ class DoubleRegistrationAttempt < StandardError; end
 class Registrar
   
   class Registrant
-    attr_reader :connection
+    attr_reader :connection, :payload
     
     def initialize(payload, connection); @connection, @payload = connection, payload; end
     
@@ -29,7 +29,7 @@ class Registrar
     end
   end
   
-  def each; @registry.each; end
+  def each(&blk); @registry.each(&blk); end
   
   def connection(fqdn); @registry[fqdn].connection; end
   

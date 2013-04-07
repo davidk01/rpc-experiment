@@ -1,3 +1,4 @@
+require 'pry'
 class NIOActor
   include Celluloid
   
@@ -9,6 +10,13 @@ class NIOActor
     end
   end
   
+  def live_agents
+    fqdns = []; @registry.each do |fqdn, registrant|
+      fqdns << [fqdn, registrant.payload["agent_dispatch_port"]]
+    end
+    fqdns
+  end
+
   def tick; @selector_loop.select(1) { |m| m.value.call(m) }; end
   
   def wipe(fqdn)
