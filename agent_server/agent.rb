@@ -62,7 +62,7 @@ module ClientRegistrationHeartbeatStateMachine
         $logger.debug "Action dispatch connection accepted."
         begin
           # this is the only line that can throw an exception
-          result = dispatcher.dispatch ActionPayload.new(conn.gets.strip)
+          result = dispatcher.dispatch ActionPayload.deserialize(conn.gets.strip)
           conn.write result.serialize
         rescue MessagePack::MalformedFormatError => e
           $logger.error e
