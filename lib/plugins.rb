@@ -26,6 +26,7 @@ module Plugins
     end
 
     def actions; @actions; end
+
   end
   
 end
