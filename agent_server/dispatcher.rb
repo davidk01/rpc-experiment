@@ -1,34 +1,5 @@
-class ResponsePayload
-
-  def initialize(opts = {})
-    [:plugin_response].each do |e|
-      raise ArgumentError, "#{e} is a required argument." if opts[e].nil?
-    end
-    @plugin_response = opts[:plugin_response]
-  end
-
-  def serialize
-    payload = {:error => false, :plugin_response => @plugin_response}.to_msgpack
-    [payload.length].pack("*i") + payload
-  end
-
-end
-
-class ErrorResponse
-
-  def initialize(opts = {})
-    [:error_message].each do |e|
-      raise ArgumentError, "#{e} is a required argument." if opts[e].nil?
-    end
-    @error_message = opts[:error_message]
-  end
-
-  def serialize
-    payload = {:error => true, :error_message => @error_message}.to_msgpack
-    [payload.length].pack("*i") + payload
-  end
-
-end
+require_relative '../lib/dispatchresponsepayload'
+require_relative '../lib/dispatcherrorpayload'
 
 class Dispatcher
 
