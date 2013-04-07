@@ -2,7 +2,8 @@
  'logger'].each { |e| require e }
 
 ['./dispatcher', '../lib/plugin_components', 
- '../lib/plugins'].each { |e| require_relative e }
+ '../lib/plugins', '../lib/actionpayload',
+ '../lib/registrationpayload'].each { |e| require_relative e }
 
 $logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
 
@@ -11,41 +12,6 @@ $agent_config = {
   :agent_dispatch_port => 3002, :registration_wait_period => 5,
   :heartbeat_interval => 5
 }
-
-# action requests are also likely to evolve over time so encapsulate
-class ActionPayload
-
-  attr_reader :plugin, :action, :arguments
-
-  def initialize(payload)
-    payload_hash = MessagePack.unpack(payload)
-    ["plugin", "action", "arguments"].each do |e|
-      if (val = payload_hash[e]).nil?
-        raise ArgumentError, "#{e} is a required argument."
-      else
-        instance_variable_set("@#{e}", val)
-      end
-    end
-  end
-
-end
-
-# registration is likely to evolve over time so encapsulate
-class RegistrationPayload
-
-  def initialize(opts = {})
-    [:dispatch_port].each do |e| 
-      raise ArgumentError, "#{e} is a required argument." if opts[e].nil?
-    end
-    @dispatch_port = opts[:dispatch_port]
-  end
-
-  def serialize
-    payload = {"agent_dispatch_port" => @dispatch_port}.to_msgpack
-    [payload.length].pack("*i") + payload
-  end
-
-end
 
 module ClientRegistrationHeartbeatStateMachine
   
