@@ -13,7 +13,8 @@ class Client
     # open a connection to the dispatch port and send the request
     def act(plugin, action, arguments = {})
       Socket.tcp(@fqdn, @port) do |sock|
-        sock.puts ActionPayload.new("plugin" => plugin, "action" => action, "arguments" => arguments)
+        payload =  ActionPayload.new("plugin" => plugin, "action" => action, "arguments" => arguments)
+        sock.puts payload.serialize
         reader = PartialReaderDSL::FiberReaderMachine.protocol do
           consume(4) { |buff| buff.unpack("*i")[0] }
           consume { |buff| MessagePack.unpack buff }
@@ -28,6 +29,8 @@ class Client
     end
 
   end
+
+  attr_reader :agents
 
   def initialize(opts = {})
     [:registration_server, :query_port].each do |e|

@@ -1,14 +1,15 @@
 require 'socket'
+require 'pp'
+require 'logger'
 require 'msgpack'
-
+require_relative './client/client'
+$logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
 payload = {
   :plugin => 'host.discovery',
   :action => 'fact_filter',
   :arguments => {"fact" => 'test_fact', "value" => 'test_value'}
 }
 
-agent_comm = Socket.tcp("localhost", 3001)
-agent_comm.puts payload.to_msgpack
-response_length = agent_comm.read(4).unpack("*i")[0]
-require 'pp'
-pp MessagePack.unpack(agent_comm.read(response_length))
+c = Client.new(:registration_server => "localhost", :query_port => 3001)
+res = c.agents[0].act("host.discovery", "fact_filter", {"fact" => "test_fact", "value" => "test_value"})
+pp res
