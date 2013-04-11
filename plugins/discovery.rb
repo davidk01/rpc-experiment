@@ -34,4 +34,12 @@ class Discovery
     facts[opts[:fact]] == opts[:value]
   end
 
+  def_action :name => "facts", :desc => [
+    "Takes the host facts and ships it back",
+    "wholesale. The idea is that the client can",
+    "use this information to do filtering with",
+    "the full power of ruby instead of some gimped DSL."
+  ].join(" "), :args => [] do |opts = {}|
+    YAML.load_file('/etc/host_facts.yaml')
+  end
 end

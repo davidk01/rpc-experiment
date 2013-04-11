@@ -1,17 +1,31 @@
 require 'socket'
 require 'msgpack'
 
+require_relative '../lib/actionpayload'
+require_relative '../lib/fiberdsl'
+
 class Client
 
   class Agent
     
     def initialize(fqdn, port); @fqdn, @port = fqdn, port; end
     
-    # TODO: Looks like I need to define a query language
-    def filter(query); end
-
     # open a connection to the dispatch port and send the request
-    def act(plugin, action, arguments = {}); end
+    def act(plugin, action, arguments = {})
+      Socket.tcp(@fqdn, @port) do |sock|
+        sock.puts ActionPayload.new("plugin" => plugin, "action" => action, "arguments" => arguments)
+        reader = PartialReaderDSL::FiberReaderMachine.protocol do
+          consume(4) { |buff| buff.unpack("*i")[0] }
+          consume { |buff| MessagePack.unpack buff }
+        end
+        # TODO: None blocking isn't always the best approach
+        # think of a way to add blocking behavior
+        while (res = reader.call(sock)).nil?
+          sleep 0.1; res = reader.call(sock)
+        end
+        res[0]
+      end
+    end
 
   end
 
@@ -22,11 +36,15 @@ class Client
     Socket.tcp(opts[:registration_server], opts[:query_port]) do |sock|
       payload = {"request_type" => "agent_discovery"}.to_msgpack
       sock.write [payload.length].pack("*i") + payload
-      reply_length = sock.read(4).unpack("*i")[0]
-      raw_agent_data = MessagePack.unpack(sock.read(reply_length))["agents"]
-      @agents = raw_agent_data.map { |agent_data| Agent.new(*agent_data) }
+      reader = PartialReaderDSL::FiberReaderMachine.protocol do
+        consume(4) { |buff| buff.unpack("*i")[0] }
+        consume { |buff| MessagePack.unpack(buff)["agents"] }
+      end
+      while (res = reader.call(sock)).nil?
+        sleep 0.1; reader.call(sock)
+      end
+      @agents = res[0].map { |agent_data| Agent.new(*agent_data) }
     end
   end
-
   
 end

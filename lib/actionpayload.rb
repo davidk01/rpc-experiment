@@ -17,8 +17,4 @@ class ActionPayload
     {"plugin" => @plugin, "action" => @action, "arguments" => @arguments}.to_msgpack
   end
 
-  def self.deserialize(serialized_payload)
-    new(MessagePack.unpack(serialized_payload))
-  end
-
 end

@@ -36,10 +36,9 @@ module PartialReaderDSL
 
     def call(conn)
       if @fiber.alive?
-        $logger.debug "Fiber still alive so resuming."
-        @fiber.resume(conn); nil
+        $logger.debug "Fiber not done."; @fiber.resume(conn); nil
       else
-        @return_stack
+        $logger.debug "Fiber done."; @return_stack
       end
     end
 
