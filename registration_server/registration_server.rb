@@ -4,6 +4,22 @@
 ['./registrar', './nioactor', './heartbeatcallback', 
  '../lib/fiberdsl'].each { |e| require_relative e }
 
+$opts = Trollop::options do
+  
+  opt "registration.port", "The port that agents send heartbeat and registration requests to.",
+    :required => true, :type => :int
+  
+  opt "registration.timeout", "How long to wait in seconds for the registration to complete.",
+    :type => :int, :default => 5
+  
+  opt "query.port", "Clients connect to this port to get a list of agents.",
+    :required => true, :type => :int
+
+  opt "stale.heartbeat.time", "All connections that are this number of minutes old will be killed.",
+    :type => :int, :default => 5
+
+end
+
 $config = {
   :log_location => STDOUT, :log_level => Logger::DEBUG,
   :registration_port => 3000, :registration_timeout => 5, # seconds
