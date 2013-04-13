@@ -1,17 +1,31 @@
 ['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
- 'logger'].each { |e| require e }
+ 'logger', 'trollop'].each { |e| require e }
 
 ['./dispatcher', '../lib/plugin_components', 
  '../lib/plugins', '../lib/actionpayload',
  '../lib/registrationpayload'].each { |e| require_relative e }
 
-$logger = Logger.new(STDOUT, 'daily'); Thread.abort_on_exception = true
+$logger = Logger.new(STDOUT, 'daily')
+Thread.abort_on_exception = true
 
-$agent_config = {
-  :registration_server => 'localhost', :registration_server_port => 3000,
-  :agent_dispatch_port => 3002, :registration_wait_period => 5,
-  :heartbeat_interval => 5
-}
+$opts = Trollop::options do
+
+  opt "registration.server", "Required for heartbeat signal.", 
+    :type => :string, :required => false
+
+  opt "registration.server.port", "Default port is 3000.", 
+    :type => :int, :required => false, :default => 3000
+
+  opt "agent.dispatch.port", "The port that accepts rpc requests.", 
+    :type => :int, :required => true
+
+  opt "registration.wait.period", "Number of seconds to wait between registration attempts.", 
+    :type => :int, :default => 5
+
+  opt "heartbeat.wait.period", "Number of seconds to wait between heartbeat events.", 
+    :type => :int, :default => 5
+
+end
 
 module ClientRegistrationHeartbeatStateMachine
   
@@ -21,11 +35,11 @@ module ClientRegistrationHeartbeatStateMachine
   
   def self.register
     begin
-      @conn = Socket.tcp($agent_config[:registration_server], $agent_config[:registration_server_port])
-      payload = RegistrationPayload.new(:dispatch_port => $agent_config[:agent_dispatch_port])
+      @conn = Socket.tcp($opts["registration.server"], $opts["registration.server.port"])
+      payload = RegistrationPayload.new(:dispatch_port => $opts["agent.dispatch.port"])
       @conn.write payload.serialize
     rescue Errno::ECONNREFUSED, Errno::EPIPE
-      wait_period = $agent_config[:registration_wait_period]
+      wait_period = $opts["registration.wait.period"]
       $logger.error "Registration connection refused or broken. Retrying in #{wait_period} seconds."
       sleep wait_period; retry
     end
@@ -37,7 +51,7 @@ module ClientRegistrationHeartbeatStateMachine
         $logger.debug "Heartbeat."
         begin
           @conn.write "OK"; @conn.flush
-          sleep $agent_config[:heartbeat_interval]
+          sleep $opts["heartbeat.wait.period"]
         rescue Errno::EPIPE
           $logger.error "Looks like the registry died."; break
         rescue Errno::ECONNRESET
@@ -58,7 +72,7 @@ module ClientRegistrationHeartbeatStateMachine
     Thread.new do
       $logger.info "Accepting rpc requests."
       dispatcher = Dispatcher.new
-      Socket.tcp_server_loop($agent_config[:agent_dispatch_port]) do |conn|
+      Socket.tcp_server_loop($opts["agent.dispatch.port"]) do |conn|
         $logger.debug "Action dispatch connection accepted."
         begin
           # this is the only line that can throw an exception
