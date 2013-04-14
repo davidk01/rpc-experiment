@@ -15,16 +15,11 @@ class Client
       Socket.tcp(@fqdn, @port) do |sock|
         payload =  ActionPayload.new("plugin" => plugin, "action" => action, "arguments" => arguments)
         sock.puts payload.serialize
-        reader = PartialReaderDSL::FiberReaderMachine.protocol do
+        reader = PartialReaderDSL::FiberReaderMachine.protocol(true) do
           consume(4) { |buff| buff.unpack("*i")[0] }
           consume { |buff| MessagePack.unpack buff }
         end
-        # TODO: None blocking isn't always the best approach
-        # think of a way to add blocking behavior
-        while (res = reader.call(sock)).nil?
-          sleep 0.1; res = reader.call(sock)
-        end
-        res[0]
+        reader.call(sock)[0]
       end
     end
 
@@ -39,14 +34,11 @@ class Client
     Socket.tcp(opts[:registration_server], opts[:query_port]) do |sock|
       payload = {"request_type" => "agent_discovery"}.to_msgpack
       sock.write [payload.length].pack("*i") + payload
-      reader = PartialReaderDSL::FiberReaderMachine.protocol do
+      reader = PartialReaderDSL::FiberReaderMachine.protocol(true) do
         consume(4) { |buff| buff.unpack("*i")[0] }
         consume { |buff| MessagePack.unpack(buff)["agents"] }
       end
-      while (res = reader.call(sock)).nil?
-        sleep 0.1; reader.call(sock)
-      end
-      @agents = res[0].map { |agent_data| Agent.new(*agent_data) }
+      @agents = reader.call(sock)[0].map { |agent_data| Agent.new(*agent_data) }
     end
   end
   
