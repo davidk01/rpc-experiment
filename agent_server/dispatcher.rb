@@ -1,6 +1,9 @@
 require_relative '../lib/dispatchresponsepayload'
 require_relative '../lib/dispatcherrorpayload'
 
+$logger = Logger.new(STDOUT, 'daily'); $logger.level = Logger::DEBUG
+Thread.abort_on_exception = true
+
 class Dispatcher
 
   def initialize

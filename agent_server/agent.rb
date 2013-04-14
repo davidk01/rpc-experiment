@@ -5,7 +5,7 @@
  '../lib/plugins', '../lib/actionpayload',
  '../lib/registrationpayload'].each { |e| require_relative e }
 
-$logger = Logger.new(STDOUT, 'daily')
+$logger = Logger.new(STDOUT, 'daily'); $logger.level = Logger::DEBUG
 Thread.abort_on_exception = true
 
 $opts = Trollop::options do
