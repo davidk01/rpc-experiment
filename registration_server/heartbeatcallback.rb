@@ -11,7 +11,7 @@ class HeartbeatCallback
     if ctx.buffer == "OK"
       @beat.call
     else
-      $logger.error "Did not recognize heartbeat message: #{ctx.buffer}."
+      puts "Did not recognize heartbeat message: #{ctx.buffer}."
       @wipe.call; throw :unrecognized_message
     end
   end
@@ -20,8 +20,7 @@ class HeartbeatCallback
     begin
       @machine.call(monitor.io)
     rescue EOFError
-      $logger.error "EOFError from #{monitor.io.remote_address}."
-      @wipe.call
+      puts "EOFError from #{monitor.io.remote_address}."; @wipe.call
     end
   end
   

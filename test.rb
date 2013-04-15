@@ -11,5 +11,6 @@ payload = {
 }
 
 c = Client.new(:registration_server => "localhost", :query_port => 3001)
+puts "Client instantiated."
 res = c.agents[0].act("host.discovery", "fact_filter", {"fact" => "test_fact", "value" => "test_value"})
 pp res

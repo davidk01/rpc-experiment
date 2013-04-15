@@ -6,7 +6,7 @@ module PartialReaderDSL
     
     def self.protocol(blocking = false, &blk)
       (current_instance = new).singleton_class.class_eval { define_method(:resumer, &blk) }
-      current_instance.blocking = blocking
+      current_instance.blocking = blocking; current_instance
     end
 
     attr_reader :return_stack, :buffer
@@ -23,20 +23,26 @@ module PartialReaderDSL
     end
 
     def read(count)
-      @blocking ? @connection.read(count) : @connection.read_nonblock(count)
+      if @blocking
+        puts "Blocing read."; @connection.read(count)
+      else
+        puts "Non-blocking read."; @connection.read_nonblock(count)
+      end
     end
 
     def consume(count = nil, &blk)
       @count = count || @return_stack.pop
+      puts "Trying to consume #{@count} bytes."
       while (delta = @count - @buffer.length) > 0
         begin
           @buffer << read(delta)
         rescue Errno::EAGAIN
-          Fiber.yield
+          puts "Yielding."; Fiber.yield
         rescue Exception => e
-          $logger.error e; raise
+          puts e; raise
         end
       end
+      puts "Consume call done."
       (@return_stack << blk.call(@buffer); empty_buffer!) if blk
     end
 
@@ -45,10 +51,15 @@ module PartialReaderDSL
     def buffer_transform(&blk); blk.call(self); empty_buffer! end
 
     def call(conn)
+      if @blocking
+        @fiber.resume(conn)
+        return @return_stack
+      end
+      puts "Checking fiber state to decide what to do."
       if @fiber.alive?
-        $logger.debug "Fiber not done."; @fiber.resume(conn); nil
+        puts "Fiber not done."; @fiber.resume(conn); nil
       else
-        $logger.debug "Fiber done."; @return_stack
+        puts "Fiber done."; @return_stack
       end
     end
 
