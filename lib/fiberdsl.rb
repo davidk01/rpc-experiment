@@ -24,25 +24,23 @@ module PartialReaderDSL
 
     def read(count)
       if @blocking
-        puts "Blocing read."; @connection.read(count)
+        @connection.read(count)
       else
-        puts "Non-blocking read."; @connection.read_nonblock(count)
+        @connection.read_nonblock(count)
       end
     end
 
     def consume(count = nil, &blk)
       @count = count || @return_stack.pop
-      puts "Trying to consume #{@count} bytes."
       while (delta = @count - @buffer.length) > 0
         begin
           @buffer << read(delta)
         rescue Errno::EAGAIN
-          puts "Yielding."; Fiber.yield
+          puts "Nothing to read. Yileding."; Fiber.yield
         rescue Exception => e
           puts e; raise
         end
       end
-      puts "Consume call done."
       (@return_stack << blk.call(@buffer); empty_buffer!) if blk
     end
 
@@ -55,11 +53,10 @@ module PartialReaderDSL
         @fiber.resume(conn)
         return @return_stack
       end
-      puts "Checking fiber state to decide what to do."
       if @fiber.alive?
-        puts "Fiber not done."; @fiber.resume(conn); nil
+        @fiber.resume(conn); nil
       else
-        puts "Fiber done."; @return_stack
+        @return_stack
       end
     end
 
