@@ -4,6 +4,7 @@
 module PluginComponents
 
   class Plugin
+
     attr_reader :plugin, :description
 
     def initialize(klass, description); @plugin, @description = klass, description; end

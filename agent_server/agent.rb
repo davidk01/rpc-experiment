@@ -1,4 +1,4 @@
-['msgpack', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
+['json', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
  'trollop'].each { |e| require e }
 
 ['./dispatcher', '../lib/plugin_components', 
@@ -75,7 +75,7 @@ module ClientRegistrationHeartbeatStateMachine
           # this is the only line that can throw an exception
           result = dispatcher.dispatch ActionPayload.deserialize(conn.gets.strip)
           conn.write result.serialize
-        rescue MessagePack::MalformedFormatError => e
+        rescue Exception => e
           puts e
         ensure
           conn.flush; conn.close

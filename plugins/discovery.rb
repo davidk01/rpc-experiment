@@ -1,11 +1,12 @@
 class Discovery
   require 'yaml'
 
-  # describe the plugin
+  # every plugin needs a name
   def self.descriptive_name
     "host.discovery"
   end
 
+  # every plugin should also have a description
   def self.description
     <<-EOF
       Provides host facts and responds to ping requests so
@@ -28,10 +29,10 @@ class Discovery
   def_action :name => "fact_filter", :desc => [
     "The agent looks in its local fact store",
     "and responds with either yes or no based",
-    "whether the fact matches or not."
+    "on whether the fact matches or not."
   ].join(" "), :args => ["fact", "value"] do |opts = {}|
     facts = YAML.load_file('/etc/host_facts.yaml')
-    facts[opts[:fact]] == opts[:value]
+    facts[opts["fact"]] == opts["value"]
   end
 
   def_action :name => "facts", :desc => [
@@ -42,4 +43,5 @@ class Discovery
   ].join(" "), :args => [] do |opts = {}|
     YAML.load_file('/etc/host_facts.yaml')
   end
+
 end

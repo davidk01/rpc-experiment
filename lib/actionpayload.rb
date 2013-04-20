@@ -14,11 +14,11 @@ class ActionPayload
   end
 
   def serialize
-    {"plugin" => @plugin, "action" => @action, "arguments" => @arguments}.to_msgpack
+    {"plugin" => @plugin, "action" => @action, "arguments" => @arguments}.to_json
   end
 
   def self.deserialize(serialized)
-    opts = MessagePack.unpack(serialized)
+    opts = JSON.parse(serialized)
     new(opts)
   end
 

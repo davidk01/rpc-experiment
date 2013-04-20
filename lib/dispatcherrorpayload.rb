@@ -8,7 +8,7 @@ class ErrorResponse
   end
 
   def serialize
-    payload = {:error => true, :error_message => @error_message}.to_msgpack
+    payload = {:error => true, :error_message => @error_message}.to_json
     [payload.length].pack("*i") + payload
   end
 

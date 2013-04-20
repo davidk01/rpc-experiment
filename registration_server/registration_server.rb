@@ -1,4 +1,4 @@
-['pry', 'msgpack', 'socket', 'thread', 'resolv', 'resolv-replace', 'nio', 'celluloid', 
+['json', 'socket', 'thread', 'resolv', 'resolv-replace', 'nio', 'celluloid', 
  'timeout', 'trollop'].each { |e| require e }
 
 ['./registrar', './nioactor', './heartbeatcallback', 
@@ -42,7 +42,7 @@ module ServerRegistrationHeartbeatStateMachine
         reader = PartialReaderDSL::FiberReaderMachine.protocol(true) do
           puts "Parsing query request."
           consume(4) { |buff| buff.unpack("*i")[0] }
-          consume { |buff| MessagePack.unpack(buff) }
+          consume { |buff| JSON.parse buff }
           puts "Query request parsing done."
         end
         payload = reader.call(conn)[0]
@@ -51,7 +51,7 @@ module ServerRegistrationHeartbeatStateMachine
         case payload["request_type"]
         when "agent_discovery"
           agents = @heartbeat_selector.live_agents
-          payload = {"agents" => agents}.to_msgpack
+          payload = {"agents" => agents}.to_json
           conn.write [payload.length].pack("*i") + payload
         end
         conn.flush; conn.close
@@ -72,8 +72,8 @@ module ServerRegistrationHeartbeatStateMachine
   def self.registration_handler(connection)
     begin
       payload = registration_message_deserializer(connection)
-    rescue MessagePack::MalformedFormatError
-      puts "MessagePack couldn't parse message: #{serialized_payload}."
+    rescue JSON::ParseError
+      puts "JSON couldn't parse message: #{serialized_payload}."
       connection.close
     rescue RegistrationTimeout
       puts "Registration timed out."; connection.close
@@ -87,7 +87,7 @@ module ServerRegistrationHeartbeatStateMachine
   def self.registration_message_deserializer(connection)
     Timeout::timeout($opts["registration.timeout"], RegistrationTimeout) do
       count = connection.read(4).unpack("*i")[0]
-      return MessagePack.unpack connection.read(count)
+      return JSON.parse connection.read(count)
     end
   end
   

@@ -9,7 +9,7 @@ class RegistrationPayload
   end
 
   def serialize
-    payload = {"agent_dispatch_port" => @dispatch_port}.to_msgpack
+    payload = {"agent_dispatch_port" => @dispatch_port}.to_json
     [payload.length].pack("*i") + payload
   end
 

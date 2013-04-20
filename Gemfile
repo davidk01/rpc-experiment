@@ -1,5 +1,5 @@
 source 'http://rubygems.org'
-gem "msgpack"
+gem 'jbundler'
 gem "nio4r"
 gem "celluloid"
 gem "trollop"

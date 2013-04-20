@@ -8,7 +8,7 @@ class ResponsePayload
   end
 
   def serialize
-    payload = {:error => false, :plugin_response => @plugin_response}.to_msgpack
+    payload = {:error => false, :plugin_response => @plugin_response}.to_json
     [payload.length].pack("*i") + payload
   end
 

@@ -1,5 +1,5 @@
 require 'socket'
-require 'msgpack'
+require 'json'
 
 require_relative '../lib/actionpayload'
 require_relative '../lib/fiberdsl'
@@ -17,7 +17,7 @@ class Client
         sock.puts payload.serialize
         reader = PartialReaderDSL::FiberReaderMachine.protocol(true) do
           consume(4) { |buff| buff.unpack("*i")[0] }
-          consume { |buff| MessagePack.unpack buff }
+          consume { |buff| JSON.parse buff }
         end
         reader.call(sock)[0]
       end
@@ -32,11 +32,11 @@ class Client
       raise ArgumentError, "#{e} is a required argument." if opts[e].nil?
     end
     Socket.tcp(opts[:registration_server], opts[:query_port]) do |sock|
-      payload = {"request_type" => "agent_discovery"}.to_msgpack
+      payload = {"request_type" => "agent_discovery"}.to_json
       sock.write [payload.length].pack("*i") + payload
       reader = PartialReaderDSL::FiberReaderMachine.protocol(true) do
         consume(4) { |buff| buff.unpack("*i")[0] }
-        consume { |buff| MessagePack.unpack(buff)["agents"] }
+        consume { |buff| JSON.parse(buff)["agents"] }
       end
       @agents = reader.call(sock)[0].map { |agent_data| Agent.new(*agent_data) }
     end
