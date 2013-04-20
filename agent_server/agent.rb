@@ -34,10 +34,11 @@ module ClientRegistrationHeartbeatStateMachine
   
   def self.register
     begin
-      @conn = Socket.tcp($opts["registration.server"], $opts["registration.server.port"])
+      @conn = TCPSocket.new($opts["registration.server"], $opts["registration.server.port"])
       payload = RegistrationPayload.new(:dispatch_port => $opts["agent.dispatch.port"])
       @conn.write payload.serialize
-    rescue Errno::ECONNREFUSED, Errno::EPIPE
+    rescue Errno::ECONNREFUSED, Errno::EPIPE, Exception => e
+      puts e.class
       wait_period = $opts["registration.wait.period"]
       puts "Registration connection refused or broken. Retrying in #{wait_period} seconds."
       sleep wait_period; retry
@@ -69,7 +70,10 @@ module ClientRegistrationHeartbeatStateMachine
   def self.accept_rpc_requests
     Thread.new do
       dispatcher = Dispatcher.new
-      Socket.tcp_server_loop($opts["agent.dispatch.port"]) do |conn|
+      puts "Starting dispatch listener: port = #{$opts["agent.dispatch.port"]}."
+      listener = TCPServer.new('localhost', $opts["agent.dispatch.port"])
+      while true
+        conn = listener.accept
         puts "Action dispatch connection accepted."
         begin
           # this is the only line that can throw an exception

@@ -26,7 +26,7 @@ class NIOActor
   def beat(fqdn); @registry.beat(fqdn); end
 
   def attach_callback(monitor)
-    fqdn = monitor.io.remote_address.getnameinfo[0]
+    fqdn = monitor.io.remote_address.ip_address
     monitor.value = HeartbeatCallback.new(proc { beat(fqdn) }, proc { wipe(fqdn) })
   end
   

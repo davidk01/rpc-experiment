@@ -38,7 +38,9 @@ module ServerRegistrationHeartbeatStateMachine
   
   def self.start_query_listener
     Thread.new do
-      Socket.tcp_server_loop($opts["query.port"]) do |conn|
+      listener = TCPServer.new('localhost', $opts["query.port"])
+      while true
+        conn = listener.accept
         reader = PartialReaderDSL::FiberReaderMachine.protocol(true) do
           puts "Parsing query request."
           consume(4) { |buff| buff.unpack("*i")[0] }
@@ -61,7 +63,9 @@ module ServerRegistrationHeartbeatStateMachine
 
   def self.start_registration_listener
     Thread.new do
-      Socket.tcp_server_loop($opts["registration.port"]) do |conn|
+      listener = TCPServer.new('localhost', $opts["registration.port"])
+      while true
+        conn = listener.accept
         Thread.new { registration_handler(conn) }
       end
     end
@@ -72,8 +76,8 @@ module ServerRegistrationHeartbeatStateMachine
   def self.registration_handler(connection)
     begin
       payload = registration_message_deserializer(connection)
-    rescue JSON::ParseError
-      puts "JSON couldn't parse message: #{serialized_payload}."
+    rescue JSON::ParserError => e
+      puts "JSON couldn't parse message: #{e}."
       connection.close
     rescue RegistrationTimeout
       puts "Registration timed out."; connection.close

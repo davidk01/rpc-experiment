@@ -7,7 +7,7 @@ class Registrar
     
     def initialize(payload, connection); @connection, @payload = connection, payload; end
     
-    def fqdn; @fqdn ||= connection.remote_address.getnameinfo[0]; end
+    def fqdn; @fqdn ||= connection.remote_address.ip_address; end
     
     def latest_timestamp; @payload["heartbeat_timestamp"]; end
     

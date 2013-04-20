@@ -36,9 +36,9 @@ module PartialReaderDSL
         begin
           @buffer << read(delta)
         rescue Errno::EAGAIN
-          puts "Nothing to read. Yileding."; Fiber.yield
+          Fiber.yield
         rescue Exception => e
-          puts e; raise
+          puts e.class; puts e; raise
         end
       end
       (@return_stack << blk.call(@buffer); empty_buffer!) if blk
