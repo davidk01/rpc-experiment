@@ -11,7 +11,7 @@ Warbler::Config.new do |config|
   config.features = %w(compiled)
 
   # Application directories to be included in the webapp.
-  config.dirs = %w(agent_server client lib registration_server)
+  config.dirs = %w(lib)
 
   # Additional files/directories to include, above those in config.dirs
   config.includes = FileList["bin/*"]

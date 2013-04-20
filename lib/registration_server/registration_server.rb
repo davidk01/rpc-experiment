@@ -1,8 +1,9 @@
 ['json', 'socket', 'thread', 'resolv', 'resolv-replace', 'nio', 'celluloid', 
  'timeout', 'trollop', 'pp'].each { |e| require e }
 
-['./registrar', './nioactor', './heartbeatcallback', 
- '../lib/fiberdsl'].each { |e| require_relative e }
+['registration_server/registrar', 'registration_server/nioactor', 
+ 'registration_server/heartbeatcallback', 
+ 'fiberdsl'].each { |e| require e }
 
 $opts = Trollop::options do
   

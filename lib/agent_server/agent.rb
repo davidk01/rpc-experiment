@@ -1,9 +1,9 @@
 ['json', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
  'trollop'].each { |e| require e }
 
-['./dispatcher', '../lib/plugin_components', 
- '../lib/plugins', '../lib/actionpayload',
- '../lib/registrationpayload'].each { |e| require_relative e }
+['agent_server/dispatcher', 'plugin_components', 
+ 'plugins', 'actionpayload',
+ 'registrationpayload'].each { |e| require e }
 
 Thread.abort_on_exception = true
 

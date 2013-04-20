@@ -1,16 +1,17 @@
-require_relative '../lib/dispatchresponsepayload'
-require_relative '../lib/dispatcherrorpayload'
+require 'dispatchresponsepayload'
+require 'dispatcherrorpayload'
 
 Thread.abort_on_exception = true
 
 class Dispatcher
 
   def initialize
-    directory = File.dirname(__FILE__)
-    plugin_directory = File.absolute_path(directory + "/../plugins")
-    Dir[plugin_directory + '/*.rb'].each do |plugin| 
-      puts "Loading plugin: #{plugin}."; require plugin
-    end
+    #directory = File.dirname(__FILE__)
+    #plugin_directory = File.absolute_path(directory + "/../plugins")
+    #Dir[plugin_directory + '/*.rb'].each do |plugin| 
+    #  puts "Loading plugin: #{plugin}."; require plugin
+    #end
+    Dir["../plugins/*"].each { |e| puts "Loading #{e}."; require_relative e }
   end
 
   def dispatch(payload)

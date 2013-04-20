@@ -1,8 +1,8 @@
 require 'socket'
 require 'json'
 
-require_relative '../lib/actionpayload'
-require_relative '../lib/fiberdsl'
+require 'actionpayload'
+require 'fiberdsl'
 
 class Client
 

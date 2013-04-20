@@ -1,1 +1,1 @@
-require_relative '../agent_server/agent.rb'
+require 'agent_server/agent'
