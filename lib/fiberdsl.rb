@@ -37,8 +37,8 @@ module PartialReaderDSL
           @buffer << read(delta)
         rescue Errno::EAGAIN
           Fiber.yield
-        rescue Exception => e
-          puts e.class; puts e; raise
+        rescue EOFError => e
+          puts e; throw :eoferror, e
         end
       end
       (@return_stack << blk.call(@buffer); empty_buffer!) if blk

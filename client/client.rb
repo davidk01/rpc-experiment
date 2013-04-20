@@ -12,7 +12,7 @@ class Client
     
     # open a connection to the dispatch port and send the request
     def act(plugin, action, arguments = {})
-      Socket.tcp(@fqdn, @port) do |sock|
+      TCPSocket.open(@fqdn, @port) do |sock|
         payload =  ActionPayload.new("plugin" => plugin, "action" => action, "arguments" => arguments)
         sock.puts payload.serialize
         reader = PartialReaderDSL::FiberReaderMachine.protocol(true) do
@@ -31,7 +31,7 @@ class Client
     [:registration_server, :query_port].each do |e|
       raise ArgumentError, "#{e} is a required argument." if opts[e].nil?
     end
-    Socket.tcp(opts[:registration_server], opts[:query_port]) do |sock|
+    TCPSocket.open(opts[:registration_server], opts[:query_port]) do |sock|
       payload = {"request_type" => "agent_discovery"}.to_json
       sock.write [payload.length].pack("*i") + payload
       reader = PartialReaderDSL::FiberReaderMachine.protocol(true) do

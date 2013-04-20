@@ -1,5 +1,5 @@
 ['json', 'socket', 'thread', 'resolv', 'resolv-replace', 'nio', 'celluloid', 
- 'timeout', 'trollop'].each { |e| require e }
+ 'timeout', 'trollop', 'pp'].each { |e| require e }
 
 ['./registrar', './nioactor', './heartbeatcallback', 
  '../lib/fiberdsl'].each { |e| require_relative e }
@@ -41,15 +41,13 @@ module ServerRegistrationHeartbeatStateMachine
       listener = TCPServer.new('localhost', $opts["query.port"])
       while true
         conn = listener.accept
+        puts "Accepted query connection."
         reader = PartialReaderDSL::FiberReaderMachine.protocol(true) do
-          puts "Parsing query request."
           consume(4) { |buff| buff.unpack("*i")[0] }
           consume { |buff| JSON.parse buff }
-          puts "Query request parsing done."
         end
         payload = reader.call(conn)[0]
         pp payload
-        puts "Query unpacked."
         case payload["request_type"]
         when "agent_discovery"
           agents = @heartbeat_selector.live_agents
