@@ -1,7 +1,7 @@
 require 'socket'
 require 'pp'
 require 'json'
-require_relative './client/client'
+require_relative './lib/client/client'
 
 payload2 = {
   :plugin => 'host.discovery',

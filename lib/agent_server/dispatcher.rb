@@ -1,17 +1,28 @@
-require 'dispatchresponsepayload'
-require 'dispatcherrorpayload'
+['../dispatchresponsepayload', '../dispatcherrorpayload'].each do |f|
+  path = File.absolute_path(File.dirname(__FILE__) + '/' + f)
+  puts "Requiring: #{path}."
+  require path
+end
 
 Thread.abort_on_exception = true
 
 class Dispatcher
 
-  def initialize
-    #directory = File.dirname(__FILE__)
-    #plugin_directory = File.absolute_path(directory + "/../plugins")
-    #Dir[plugin_directory + '/*.rb'].each do |plugin| 
-    #  puts "Loading plugin: #{plugin}."; require plugin
-    #end
-    Dir["../plugins/*"].each { |e| puts "Loading #{e}."; require_relative e }
+  def initialize(extra_plugin_dir = nil)
+    puts "Loading jar-file plugins."
+    directory = File.dirname(__FILE__)
+    plugin_directory = File.absolute_path(directory + "/../plugins")
+    Dir[plugin_directory + '/*.rb'].each do |plugin| 
+      puts "Loading plugin: #{plugin}."; require plugin
+    end
+    puts "Finished loading jar-file plugins."
+    if extra_plugin_dir
+      puts "Loading non-jar-file plugins."
+      Dir[extra_plugin_dir + "/*.rb"].each do |plugin|
+        puts "Loading external plugin: #{plugin}."; require plugin
+      end
+      puts "Finished loading non-jar-file plugins."
+    end
   end
 
   def dispatch(payload)

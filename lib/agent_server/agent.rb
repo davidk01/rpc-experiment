@@ -1,16 +1,19 @@
 ['json', 'resolv', 'resolv-replace', 'socket', 'celluloid', 
  'trollop'].each { |e| require e }
 
-['agent_server/dispatcher', 'plugin_components', 
- 'plugins', 'actionpayload',
- 'registrationpayload'].each { |e| require e }
+['./dispatcher', '../plugin_components', '../plugins',
+ '../actionpayload', '../registrationpayload'].each do |f|
+  path = File.absolute_path(File.dirname(__FILE__) + '/' + f)
+  puts "Requiring: #{path}."
+  require path
+end
 
 Thread.abort_on_exception = true
 
 $opts = Trollop::options do
 
   opt "registration.server", "Required for heartbeat signal.", 
-    :type => :string, :required => false
+    :type => :string, :required => true
 
   opt "registration.server.port", "Default port is 3000.", 
     :type => :int, :required => false, :default => 3000
@@ -23,6 +26,9 @@ $opts = Trollop::options do
 
   opt "heartbeat.wait.period", "Number of seconds to wait between heartbeat events.", 
     :type => :int, :default => 5
+
+  opt "extra.plugin.dir", "Absolute directory path for plugins.",
+    :type => :string, :required => false
 
 end
 
@@ -69,7 +75,7 @@ module ClientRegistrationHeartbeatStateMachine
   # as what is sent out during the registration attempt.
   def self.accept_rpc_requests
     Thread.new do
-      dispatcher = Dispatcher.new
+      dispatcher = Dispatcher.new($opts["extra.plugin.dir"])
       puts "Starting dispatch listener: port = #{$opts["agent.dispatch.port"]}."
       listener = TCPServer.new('localhost', $opts["agent.dispatch.port"])
       while true

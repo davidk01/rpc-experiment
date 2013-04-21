@@ -1,8 +1,11 @@
 require 'socket'
 require 'json'
 
-require 'actionpayload'
-require 'fiberdsl'
+['../actionpayload', '../fiberdsl'].each do |f|
+  path = File.absolute_path(File.dirname(__FILE__) + '/' + f)
+  puts "Requiring: #{path}."
+  require path
+end
 
 class Client
 

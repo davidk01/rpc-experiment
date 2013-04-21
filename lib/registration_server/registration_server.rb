@@ -1,9 +1,12 @@
 ['json', 'socket', 'thread', 'resolv', 'resolv-replace', 'nio', 'celluloid', 
  'timeout', 'trollop', 'pp'].each { |e| require e }
 
-['registration_server/registrar', 'registration_server/nioactor', 
- 'registration_server/heartbeatcallback', 
- 'fiberdsl'].each { |e| require e }
+['./registrar', './nioactor', './heartbeatcallback', 
+ '../fiberdsl'].each do |f|
+  path = File.absolute_path(File.dirname(__FILE__) + '/' + f)
+  puts "Requiring: #{path}."
+  require path
+end
 
 $opts = Trollop::options do
   
