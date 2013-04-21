@@ -28,3 +28,16 @@ node options.
 To create a debian package you'll need `fpm` and you'll also need a ruby interpreter other than jruby. Once you
 got those just run `rake make_debian[1.0]` to build a debian package. I'm using rake's tasks with parameters and
 the task just takes a version parameter.
+
+Agent Interaction
+=================
+
+Once you have an agent node and a registration node up and running the next thing to do is to interact with them
+from ruby. You'll need to make and install the client gem but that's pretty easy:
+```
+cd lib/client/rpc_client
+rake install
+```
+
+Now just open up an `irb` prompt and require the client library: `require 'rpc_client'`. Take a look at `test.rb`
+for how to use the client.
