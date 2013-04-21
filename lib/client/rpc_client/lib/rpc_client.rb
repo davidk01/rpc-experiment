@@ -1,5 +1,10 @@
 require "rpc_client/version"
+require "rpc_client/client"
 
 module RpcClient
-  # Your code goes here...
+
+  def self.make_client(opts)
+    Client.new(opts)
+  end
+
 end
