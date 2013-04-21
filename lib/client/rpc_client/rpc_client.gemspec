@@ -6,10 +6,10 @@ require 'rpc_client/version'
 Gem::Specification.new do |spec|
   spec.name          = "rpc_client"
   spec.version       = RpcClient::VERSION
-  spec.authors       = ["TODO: Write your name"]
-  spec.email         = ["TODO: Write your email address"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
+  spec.authors       = ["david karapetyan"]
+  spec.email         = ["dkarapetyan@gmail.com"]
+  spec.description   = %q{A simple client for talking to registration server.}
+  spec.summary       = %q{A simple client that uses the JSON rpc to talk to registration and agent nodes.}
   spec.homepage      = ""
   spec.license       = "MIT"
 
