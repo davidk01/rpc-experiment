@@ -8,16 +8,16 @@ Warbler::Config.new do |config|
   # - gemjar: package the gem repository in a jar file in WEB-INF/lib
   # - executable: embed a web server and make the war executable
   # - compiled: compile .rb files to .class files
-  config.features = %w(compiled)
+  config.features = %w()
 
   # Application directories to be included in the webapp.
-  config.dirs = %w(lib)
+  config.dirs = %w(bin) + (FileList["lib/*"] - FileList["lib/client"])
 
   # Additional files/directories to include, above those in config.dirs
-  config.includes = FileList["bin/*"]
+  config.includes = FileList["lib/*"]
 
   # Additional files/directories to exclude
-  config.excludes = FileList["lib/client"]
+  #config.excludes = FileList["./Gemfile*", "../Gemfile*"]
 
   # Additional Java .jar files to include.  Note that if .jar files are placed
   # in lib (and not otherwise excluded) then they need not be mentioned here.
