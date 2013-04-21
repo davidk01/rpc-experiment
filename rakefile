@@ -1,0 +1,14 @@
+desc "Make rpc.jar"
+file "rpc.jar" do
+  sh "jruby -S warble jar"
+end
+
+desc "Make debian package"
+task :make_debian, [:version] => ["rpc.jar"] do |t, args|
+  command = [
+    "fpm -s dir -t deb",
+    "-n jruby-rpc --prefix /usr/share/jruby-rpc",
+    "-v #{args.version} rpc.jar init.d init god"
+  ].join(" ")
+  sh command
+end
