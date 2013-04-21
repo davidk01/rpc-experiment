@@ -1,4 +1,30 @@
 rpc-experiment
 ==============
 
-How hard is it to build a pluggable rpc framework? Turns out, not so hard.
+How hard is it to build a pluggable rpc framework? Turns out, not so hard if you use the right libraries, e.g.
+celluloid, nio4r, etc.
+
+Prerequisites
+=============
+
+You'll need jruby and warbler. I recommend installing jruby with rvm.
+
+Creating JAR or DEB
+===================
+
+If you want to test it out to see how it works then all you have to do is clone the repo and run the rake
+task that creates the jar file:
+```
+git clone https://github.com/davidk01/rpc-experiment.git
+rake rpc.jar
+```
+
+Then just run `java -jar rpc.jar` to get a help menu and proceed with either starting an agent node or
+a registration node. To test things locally take a look at `god` subdirectory for some standard command
+line options. You can also get all the command line options by running `java -jar rpc.jar agent_node --help`
+for the agent node options and similarly `java -jar rpc.jar registration_node --help` for the registration
+node options.
+
+To create a debian package you'll need `fpm` and you'll also need a ruby interpreter other than jruby. Once you
+got those just run `rake make_debian[1.0]` to build a debian package. I'm using rake's tasks with parameters and
+the task just takes a version parameter.
