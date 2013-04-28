@@ -42,7 +42,7 @@ module ServerRegistrationHeartbeatStateMachine
   
   def self.start_query_listener
     Thread.new do
-      listener = TCPServer.new('localhost', $opts["query.port"])
+      listener = TCPServer.new($opts["query.port"])
       while true
         conn = listener.accept
         puts "Accepted query connection."
@@ -65,7 +65,7 @@ module ServerRegistrationHeartbeatStateMachine
 
   def self.start_registration_listener
     Thread.new do
-      listener = TCPServer.new('localhost', $opts["registration.port"])
+      listener = TCPServer.new($opts["registration.port"])
       while true
         conn = listener.accept
         Thread.new { registration_handler(conn) }

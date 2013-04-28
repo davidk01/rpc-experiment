@@ -77,7 +77,7 @@ module ClientRegistrationHeartbeatStateMachine
     Thread.new do
       dispatcher = Dispatcher.new($opts["extra.plugin.dir"])
       puts "Starting dispatch listener: port = #{$opts["agent.dispatch.port"]}."
-      listener = TCPServer.new('localhost', $opts["agent.dispatch.port"])
+      listener = TCPServer.new($opts["agent.dispatch.port"])
       while true
         conn = listener.accept
         puts "Action dispatch connection accepted."
