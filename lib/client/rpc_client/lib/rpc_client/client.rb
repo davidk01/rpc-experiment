@@ -2,7 +2,7 @@ require 'socket'
 require 'json'
 
 ['../actionpayload', '../fiberdsl'].each do |f|
-  path = File.absolute_path(File.dirname(__FILE__) + '/' + f)
+  path = File.expand_path(File.dirname(__FILE__) + '/' + f)
   puts "Requiring: #{path}."
   require path
 end
