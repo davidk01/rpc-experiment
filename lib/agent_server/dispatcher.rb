@@ -13,13 +13,21 @@ class Dispatcher
     directory = File.dirname(__FILE__)
     plugin_directory = File.absolute_path(directory + "/../plugins")
     Dir[plugin_directory + '/*.rb'].each do |plugin| 
-      puts "Loading plugin: #{plugin}."; require plugin
+      begin
+        puts "Loading plugin: #{plugin}."; require plugin
+      rescue Exception => e
+        puts "ERROR: Couldn't load plugin #{plugin}: #{e}."
+      end
     end
     puts "Finished loading jar-file plugins."
     if extra_plugin_dir
       puts "Loading non-jar-file plugins."
       Dir[extra_plugin_dir + "/*.rb"].each do |plugin|
-        puts "Loading external plugin: #{plugin}."; require plugin
+        begin
+          puts "Loading external plugin: #{plugin}."; require plugin
+        rescue Exception => e
+          puts "ERROR: Couldn't load external plugin #{plugin}: #{e}."
+        end
       end
       puts "Finished loading non-jar-file plugins."
     end
