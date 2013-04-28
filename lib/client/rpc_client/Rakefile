@@ -1,7 +1,6 @@
 require "bundler/gem_tasks"
 
 ['actionpayload.rb', 'fiberdsl.rb'].each do |file_req|
-
   desc "Setting up required file dependency: #{file_req}."
   file "lib/#{file_req}" => "../../#{file_req}" do |t|
     cp t.prerequisites[0], t.name
@@ -11,5 +10,4 @@ require "bundler/gem_tasks"
 
   # add the dependecy to the build task
   task :build => "lib/#{file_req}"
-
 end
