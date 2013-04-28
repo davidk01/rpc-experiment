@@ -1,4 +1,3 @@
-puts __FILE__
 if ARGV[0] == 'agent_node'
   require_relative '../lib/agent_server/agent'
 elsif ARGV[0] == 'registration_node'
