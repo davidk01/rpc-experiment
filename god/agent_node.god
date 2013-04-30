@@ -7,7 +7,8 @@ God.watch do |w|
     "--registration.server.port 3000",
     "--agent.dispatch.port 3002",
     "--registration.wait.period 10",
-    "--heartbeat.wait.period 20"
+    "--heartbeat.wait.period 20",
+    "--extra.plugin.dir /usr/share/jruby-rpc/plugins"
   ].join(" ")
   w.start = start_command
   w.log = "/var/log/jruby-rpc-agent-node.log"
