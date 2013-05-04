@@ -8,6 +8,7 @@ task :make_debian, [:version] => ["rpc.jar"] do |t, args|
   command = [
     "fpm -s dir -t deb",
     "-n jruby-rpc --prefix /usr/share/jruby-rpc",
+    "--after-install post_install.rb",
     "-v #{args.version} rpc.jar god"
   ].join(" ")
   sh command
