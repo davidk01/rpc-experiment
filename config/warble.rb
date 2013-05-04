@@ -11,13 +11,13 @@ Warbler::Config.new do |config|
   config.features = %w(compiled)
 
   # Application directories to be included in the webapp.
-  config.dirs = %w(bin) + (FileList["lib/*"] - FileList["lib/client"])
+  config.dirs = %w(bin lib)# + (FileList["lib/*"] - FileList["lib/client"])
 
   # Additional files/directories to include, above those in config.dirs
-  config.includes = FileList["lib/*"]
+  config.includes = FileList["lib/*.rb"]
 
   # Additional files/directories to exclude
-  #config.excludes = FileList["./Gemfile*", "../Gemfile*"]
+  config.excludes = FileList["./Gemfile*", "../Gemfile*", "./lib/client"]
 
   # Additional Java .jar files to include.  Note that if .jar files are placed
   # in lib (and not otherwise excluded) then they need not be mentioned here.
