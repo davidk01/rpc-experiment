@@ -8,6 +8,17 @@ end
 
 class Client
 
+  # just a container for results from a filtring operation
+  class FilterResponse
+    
+    :attr_reader :result, :agent
+
+    def initialize(truthy_result, agent)
+      @result = truthy_result; @agent = agent
+    end
+
+  end
+
   class Agent
     
     def initialize(fqdn, port); @fqdn, @port = fqdn, port; end
@@ -63,7 +74,7 @@ class Client
       threads.map {|t| t.join; t[:result]}.select {|res, agent| res}
     end
     result_slices.reduce([]) do |memo, data_slice|
-      data_slice.each {|data_item| memo << data_item}; memo
+      data_slice.each {|data_item| memo << FilterResponse.new(*data_item)}; memo
     end
   end
 
