@@ -11,7 +11,7 @@ class Client
   # just a container for results from a filtring operation
   class FilterResponse
     
-    :attr_reader :result, :agent
+    attr_reader :result, :agent
 
     def initialize(truthy_result, agent)
       @result = truthy_result; @agent = agent
